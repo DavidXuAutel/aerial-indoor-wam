@@ -8,7 +8,7 @@
 
 ## 一句话
 
-E2h ❌。**C1 FT ✅**。**@0.50 eval 进行中**。禁 E3。
+E2h ❌。**C1 FT ✅；@0.50 eval ❌ 未过门**（1/3 seed 有到点；mean d_end **3.55 m**）。按计划 **停 / 评估室内 WM+π 适配**，禁 E3。
 
 ## 勾选
 
@@ -22,8 +22,8 @@ E2h ❌。**C1 FT ✅**。**@0.50 eval 进行中**。禁 E3。
 | **E2i.diag / dtfix** | ✅ |
 | **E2i.2a** B2 夹具 @0.20 | ✅ **34 arrived** |
 | **E2i.2b** B1 | ✅ **usable=62 ≥50** → `dataset_indoor_b99_none_near_20260831` |
-| **E2i.3** C1 短 FT @0.50 @4090 | ✅ FT 完成；🔄 **@0.50 罩 ON eval 进行中**（8×3 seed）→ log `logs/e2i_c1_eval_050_20260831.log` |
-| **E2i.4** C1/C2 H100 长 FT | ⬜ |
+| **E2i.3** C1 短 FT + @0.50 eval | ✅ FT；❌ **eval gate FAIL** — seeds_with_arrival=**1**/3；mean_d=**3.55**；summary `artifacts/indoor_c1_eval_050_summary_c1_050_20260831.json` |
+| **E2i.4** C1/C2 H100 长 FT | ⛔ C1 不过门 → 不自动开 |
 | E3 | ⛔ 禁止 |
 
 ## E2h 结案数字（引用）

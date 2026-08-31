@@ -2,8 +2,10 @@
 
 > **Workspace**：`/home/yao/aerial-indoor-wam`  
 > **权威**：`RUNBOOK_indoor_0xm.md` §8.9 **E2i**  
+> **完整快照（方案+模型+接线）**：[`INDOOR_FULL_STACK_20260831.md`](INDOOR_FULL_STACK_20260831.md)  
 > **分析+计划**：[`INDOOR_E2I_PLAN_20260831.md`](INDOOR_E2I_PLAN_20260831.md) **v2**  
 > **致命缺陷**：[`INDOOR_FATAL_DEFECTS_20260831.md`](INDOOR_FATAL_DEFECTS_20260831.md)  
+> **视频抽检**：[`INDOOR_C1_ROUTE_VID_AUDIT_20260831.md`](INDOOR_C1_ROUTE_VID_AUDIT_20260831.md)  
 > **更新**：2026-08-31
 
 ## 一句话

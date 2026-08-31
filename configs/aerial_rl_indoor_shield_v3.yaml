@@ -1,0 +1,55 @@
+# E2i.1b — shield_v3 (more permissive than v2).
+# v2 still had intervention≈0.97 on B99 lobby (depth_med≈2 m but depth_min_pred often << L1).
+# v3: engage only at near-field; match micro action box so open-lobby cruise rarely caps.
+
+env:
+  backend: airsim
+  host: 127.0.0.1
+  port: 41451
+  camera: front_custom
+  vehicle: drone_1
+  width: 224
+  height: 224
+  step_hz: 5.0
+  grab_depth: true
+  health_check: false
+  seed: 0
+
+reward:
+  w_progress: 1.0
+  w_collision: 10.0
+  w_maneuver: 0.01
+  success_bonus: 10.0
+  success_dist_m: 0.5
+
+action_limits:
+  max_dx: 0.15
+  max_dy: 0.08
+  max_dz: 0.08
+  max_dyaw: 0.10
+
+safety:
+  kind: three_zone
+  # Near-field only vs v2 0.90 / 0.50 / 0.25
+  l1_m: 0.45
+  l2_m: 0.28
+  l3_m: 0.14
+  # Caps ≈ indoor micro box @5Hz (0.15 m/step → 0.75 m/s)
+  v1_m_s: 0.55
+  v2_m_s: 0.30
+  v_stop_m_s: 0.05
+  v_cruise_m_s: 0.75
+  a_max_m_s2: 2.0
+  delay_s: 0.1
+  min_tau_s: 0.35
+  max_p_coll: 0.65
+  retreat_step_m: 0.12
+
+world_model:
+  recurrent_dim: 512
+  stoch_dim: 32
+  stoch_classes: 32
+
+planner:
+  enable: true
+  horizon: 5

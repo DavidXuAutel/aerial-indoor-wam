@@ -1,0 +1,54 @@
+# E2i.1 candidate indoor shield retune (Building_99, 3 m segments).
+# Goal: cut intervention vs e2h baseline (L1=1.5 → ~1.0 rate) while keeping stop near wall.
+# Rationale: B99 depth_med≈1.7–2.2 m so L1=1.5 engages almost always; shrink engage distances.
+
+env:
+  backend: airsim
+  host: 127.0.0.1
+  port: 41451
+  camera: front_custom
+  vehicle: drone_1
+  width: 224
+  height: 224
+  step_hz: 5.0
+  grab_depth: true
+  health_check: false
+  seed: 0
+
+reward:
+  w_progress: 1.0
+  w_collision: 10.0
+  w_maneuver: 0.01
+  success_bonus: 10.0
+  success_dist_m: 0.5
+
+action_limits:
+  max_dx: 0.15
+  max_dy: 0.08
+  max_dz: 0.08
+  max_dyaw: 0.10
+
+safety:
+  kind: three_zone
+  # Closer engage than e2h baseline 1.5 / 0.8 / 0.4
+  l1_m: 0.90
+  l2_m: 0.50
+  l3_m: 0.25
+  v1_m_s: 0.45
+  v2_m_s: 0.20
+  v_stop_m_s: 0.05
+  v_cruise_m_s: 0.60
+  a_max_m_s2: 1.5
+  delay_s: 0.1
+  min_tau_s: 0.5
+  max_p_coll: 0.5
+  retreat_step_m: 0.20
+
+world_model:
+  recurrent_dim: 512
+  stoch_dim: 32
+  stoch_classes: 32
+
+planner:
+  enable: true
+  horizon: 5

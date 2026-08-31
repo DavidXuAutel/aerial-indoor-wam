@@ -1,0 +1,727 @@
+"""Step 3 DepthHead unit tests — skip when torch absent (Mac may lack it).
+
+The torch-free ④ collector-wiring test lives in ``test_collector_depth_shield``
+so it still runs on GPU-less hosts.
+"""
+from __future__ import annotations
+
+import numpy as np
+import pytest
+
+torch = pytest.importorskip("torch")
+
+from experiments.aerial.rl.buffer import ReplayBuffer, Transition
+from experiments.aerial.rl.dynamics_torch import (
+    _DepthHead,
+    depth_delta_scale_loss,
+    depth_head_loss,
+)
+from experiments.aerial.rl.env.obs import Observation
+from experiments.aerial.rl.train_depth_head import (
+    _adapt_state_dict,
+    _apply_freeze_encoder,
+    _load_depth_cfg,
+    _sample_approach_biased_windows,
+    build_fwd_hard_window_cache,
+    sample_fwd_hard_windows,
+    main as train_depth_main,
+)
+
+
+def test_motion_channels_use_a_separate_stem_and_carry_frame_differences():
+    plain = _DepthHead(image_size=16, n_frames=3, base=8)
+    moving = _DepthHead(image_size=16, n_frames=3, base=8, motion_channels=True)
+    # The RGB stem keeps its pretrained shape; the differences get their own.
+    assert plain.encoder[0].in_channels == 3 * 3
+    assert moving.encoder[0].in_channels == 3 * 3
+    assert moving.stem_motion.in_channels == 2 * 3
+    assert plain.stem_motion is None
+
+    rgb = torch.randint(0, 256, (2, 3, 16, 16, 3), dtype=torch.uint8)
+    packed = _DepthHead.pack_rgb_nhwc(rgb, 3, motion_channels=True)
+    assert packed.shape == (2, 15, 16, 16)
+    frames = rgb.float().div(255.0).permute(0, 1, 4, 2, 3)
+    expected = (frames[:, 1:] - frames[:, :-1]).reshape(2, 6, 16, 16)
+    torch.testing.assert_close(packed[:, 9:], expected)
+
+    depth, log_sigma = moving.predict_from_window(rgb)
+    assert depth.shape == (2, 16, 16) and log_sigma.shape == (2, 16, 16)
+    assert torch.all(depth > 0)
+
+
+def test_scale_factorized_starts_as_identity_and_scales_whole_map():
+    model = _DepthHead(image_size=16, n_frames=2, base=8, scale_factorized=True)
+    plain = _DepthHead(image_size=16, n_frames=2, base=8)
+    plain.load_state_dict(
+        {k: v for k, v in model.state_dict().items() if not k.startswith("scale_mlp.")}
+    )
+    rgb = torch.randint(0, 256, (2, 2, 16, 16, 3), dtype=torch.uint8)
+    with torch.no_grad():
+        scaled, _ = model.predict_from_window(rgb)
+        base, _ = plain.predict_from_window(rgb)
+    # Zero-init scale_mlp → exp(0) = 1, so a fresh scale-factorized net is the
+    # plain net. Without this, warm starts would silently shift the depth level.
+    torch.testing.assert_close(scaled, base)
+
+    with torch.no_grad():
+        model.scale_mlp[-1].bias.fill_(float(np.log(2.0)))
+        doubled, _ = model.predict_from_window(rgb)
+    torch.testing.assert_close(doubled, base * 2.0, rtol=1e-4, atol=1e-4)
+
+
+def test_adapt_init_preserves_predictions_of_plain_checkpoint():
+    torch.manual_seed(0)
+    plain = _DepthHead(image_size=16, n_frames=3, base=8)
+    upgraded = _DepthHead(
+        image_size=16, n_frames=3, base=8, motion_channels=True, scale_factorized=True
+    )
+    adapted, notes = _adapt_state_dict(plain.state_dict(), upgraded)
+    upgraded.load_state_dict(adapted, strict=True)
+    assert any("stem_motion" in n for n in notes)
+    assert any("scale_mlp" in n for n in notes)
+
+    rgb = torch.randint(0, 256, (2, 3, 16, 16, 3), dtype=torch.uint8)
+    with torch.no_grad():
+        before, _ = plain.predict_from_window(rgb)
+        after, _ = upgraded.predict_from_window(rgb)
+    # The point of the adapter: step 0 of an upgraded run reproduces the source
+    # checkpoint exactly, so the AbsRel already paid for is not thrown away.
+    torch.testing.assert_close(before, after)
+
+
+def test_freeze_encoder_keeps_delta_scale_pathway_trainable():
+    model = _DepthHead(
+        image_size=16, n_frames=3, base=8, motion_channels=True, scale_factorized=True
+    )
+    trainable = _apply_freeze_encoder(model, True)
+    ids = {id(p) for p in trainable}
+    # stem_motion sits at the input but is head, not encoder: freezing it would
+    # make decoder-only Δ finetuning a no-op for ③.
+    assert all(id(p) in ids for p in model.new_pathway_parameters())
+    assert not any(p.requires_grad for p in model.encoder.parameters())
+
+
+def test_new_pathway_starts_at_zero_and_is_separable_for_the_optimizer():
+    model = _DepthHead(
+        image_size=16, n_frames=3, base=8, motion_channels=True, scale_factorized=True
+    )
+    new = model.new_pathway_parameters()
+    assert new, "motion/scale nets must expose a Δ-scale pathway"
+    assert all(float(p.detach().abs().sum()) == 0.0 for p in model.stem_motion.parameters())
+    # Separate tensors, not a slice of a shared weight: Adam normalises per
+    # parameter, so only distinct tensors can carry a distinct lr.
+    trunk = [p for p in model.parameters() if not any(p is q for q in new)]
+    assert trunk and len(trunk) + len(new) == len(list(model.parameters()))
+
+    plain = _DepthHead(image_size=16, n_frames=3, base=8)
+    assert plain.new_pathway_parameters() == []
+
+
+def test_from_payload_rebuilds_architecture_flags():
+    model = _DepthHead(
+        image_size=16, n_frames=3, base=8, motion_channels=True, scale_factorized=True
+    )
+    payload = {
+        "model": model.state_dict(),
+        "image_size": 16,
+        "n_frames": 3,
+        "base": 8,
+        "motion_channels": True,
+        "scale_factorized": True,
+    }
+    rebuilt = _DepthHead.from_payload(payload)
+    rebuilt.load_state_dict(payload["model"], strict=True)
+    assert rebuilt.motion_channels and rebuilt.scale_factorized
+
+    legacy = _DepthHead.from_payload({"image_size": 16, "n_frames": 3, "base": 8})
+    assert not legacy.motion_channels and not legacy.scale_factorized
+
+
+def test_every_depth_head_loader_goes_through_from_payload():
+    """①d and ③ read the same ckpt; a loader that forgets a flag crashes one.
+
+    Guards the 2026-08-06 miss where ``_score_1d_holdout`` still built a plain
+    ``_DepthHead`` and the gate died on a motion-channel checkpoint's stem.
+    """
+    import re
+    from pathlib import Path
+
+    rl_dir = Path(__file__).resolve().parents[1]
+    offenders = []
+    for path in (rl_dir / "_v0_gate.py", rl_dir / "depth_predictor.py"):
+        for n, line in enumerate(path.read_text().splitlines(), 1):
+            if re.search(r"_DepthHead\(", line):
+                offenders.append(f"{path.name}:{n}: {line.strip()}")
+    assert not offenders, (
+        "construct via _DepthHead.from_payload so architecture flags round-trip: "
+        + "; ".join(offenders)
+    )
+
+
+def test_depth_head_forward_shapes():
+    model = _DepthHead(image_size=16, n_frames=2, base=8)
+    rgb = torch.randint(0, 256, (2, 3, 16, 16, 3), dtype=torch.uint8)
+    depth, log_sigma = model.predict_from_window(rgb)
+    assert depth.shape == (2, 16, 16)
+    assert log_sigma.shape == (2, 16, 16)
+    assert torch.all(depth > 0)
+
+
+def test_depth_head_loss_finite_and_improves_on_identity():
+    gt = torch.ones(2, 16, 16) * 4.0
+    pred_good = gt.clone()
+    log_sigma = torch.zeros_like(gt)
+    loss_good, stats_good = depth_head_loss(pred_good, log_sigma, gt)
+    pred_bad = gt * 2.0
+    loss_bad, stats_bad = depth_head_loss(pred_bad, log_sigma, gt)
+    assert torch.isfinite(loss_good)
+    assert stats_good["absrel"] < stats_bad["absrel"]
+
+
+def test_near_overread_hinge_penalizes_only_overread():
+    gt = torch.ones(1, 8, 8) * 2.0  # all near (≤5 m)
+    log_sigma = torch.zeros_like(gt)
+    over = gt * 1.5
+    under = gt * 0.5
+    _, s_over = depth_head_loss(
+        over, log_sigma, gt, near_weight=0.0, near_overread_hinge_weight=1.0
+    )
+    _, s_under = depth_head_loss(
+        under, log_sigma, gt, near_weight=0.0, near_overread_hinge_weight=1.0
+    )
+    assert s_over["near_overread_hinge"] > 0.0
+    assert s_under["near_overread_hinge"] == 0.0
+
+
+def test_near_pinball_tau_emphasizes_overread():
+    gt = torch.ones(1, 8, 8) * 2.0
+    log_sigma = torch.zeros_like(gt)
+    over = gt * 1.5   # rel = +0.5
+    under = gt * 0.5  # rel = -0.5
+    _, s_over = depth_head_loss(
+        over,
+        log_sigma,
+        gt,
+        near_weight=0.0,
+        near_absrel_pinball_weight=1.0,
+        near_absrel_pinball_tau=0.9,
+    )
+    _, s_under = depth_head_loss(
+        under,
+        log_sigma,
+        gt,
+        near_weight=0.0,
+        near_absrel_pinball_weight=1.0,
+        near_absrel_pinball_tau=0.9,
+    )
+    # τ=0.9 → over contributes 0.9*|rel|, under 0.1*|rel|
+    assert s_over["near_pinball"] > s_under["near_pinball"]
+    assert abs(s_over["near_pinball"] / s_under["near_pinball"] - 9.0) < 1e-3
+
+
+def test_fwd_overread_hinge_matches_forward_geometry():
+    """v2 A′: only forward-crop over-read when GT_fwd ≤ trigger."""
+    H = W = 16
+    gt = torch.ones(1, H, W) * 10.0  # far everywhere
+    # Put a near obstacle in the center crop (center_frac=0.5 → 8×8 center).
+    gt[:, 4:12, 4:12] = 2.0
+    log_sigma = torch.zeros_like(gt)
+    # Over-read only in forward crop.
+    over = gt.clone()
+    over[:, 4:12, 4:12] = 4.0  # 2→4 over-read
+    # Under-read in forward crop.
+    under = gt.clone()
+    under[:, 4:12, 4:12] = 1.0
+    _, s_over = depth_head_loss(
+        over,
+        log_sigma,
+        gt,
+        near_weight=0.0,
+        fwd_overread_hinge_weight=1.0,
+        center_frac=0.5,
+        trigger_m=3.0,
+    )
+    _, s_under = depth_head_loss(
+        under,
+        log_sigma,
+        gt,
+        near_weight=0.0,
+        fwd_overread_hinge_weight=1.0,
+        center_frac=0.5,
+        trigger_m=3.0,
+    )
+    assert s_over["n_fwd_trigger"] >= 1
+    assert s_over["fwd_overread_hinge"] > 0.0
+    assert s_under["fwd_overread_hinge"] == 0.0
+
+
+def test_near_absrel_p90_penalizes_tail():
+    gt = torch.ones(1, 8, 8) * 2.0
+    log_sigma = torch.zeros_like(gt)
+    # Mostly good, one bad corner → high AbsRel tail.
+    mild = gt * 1.1
+    wild = gt.clone()
+    wild[:, :2, :2] = gt[:, :2, :2] * 3.0
+    _, s_mild = depth_head_loss(
+        mild, log_sigma, gt, near_weight=0.0, near_absrel_p90_weight=1.0
+    )
+    _, s_wild = depth_head_loss(
+        wild, log_sigma, gt, near_weight=0.0, near_absrel_p90_weight=1.0
+    )
+    assert s_wild["near_absrel_p90"] > s_mild["near_absrel_p90"]
+
+
+def test_silog_weight_zero_drops_silog_from_loss():
+    """Declare v3 C″: P1 must be able to shut full-mask SILog (not only AbsRel)."""
+    gt = torch.ones(1, 8, 8) * 5.0
+    pred = gt * 1.5
+    log_sigma = torch.zeros_like(gt)
+    loss_on, _ = depth_head_loss(
+        pred, log_sigma, gt, absrel_weight=0.0, silog_weight=0.5, nll_weight=0.0
+    )
+    loss_off, _ = depth_head_loss(
+        pred, log_sigma, gt, absrel_weight=0.0, silog_weight=0.0, nll_weight=0.0
+    )
+    assert float(loss_on.item()) > 0.0
+    assert float(loss_off.item()) == pytest.approx(0.0, abs=1e-6)
+
+
+def test_fwd_miss_hinge_uses_trigger_not_relative():
+    """Declare v3 A″: hinge = relu(D̂_fwd − trigger) on GT_fwd ≤ trigger."""
+    H = W = 16
+    gt = torch.ones(1, H, W) * 10.0
+    gt[:, 4:12, 4:12] = 2.0  # GT_fwd = 2 ≤ 3
+    log_sigma = torch.zeros_like(gt)
+    # Over GT but still under trigger → relative hinge would fire; miss hinge must not.
+    under_trig = gt.clone()
+    under_trig[:, 4:12, 4:12] = 2.5
+    # Past trigger → miss hinge fires.
+    over_trig = gt.clone()
+    over_trig[:, 4:12, 4:12] = 4.0
+    _, s_under = depth_head_loss(
+        under_trig,
+        log_sigma,
+        gt,
+        absrel_weight=0.0,
+        silog_weight=0.0,
+        nll_weight=0.0,
+        fwd_overread_hinge_weight=1.0,
+        center_frac=0.5,
+        trigger_m=3.0,
+    )
+    _, s_over = depth_head_loss(
+        over_trig,
+        log_sigma,
+        gt,
+        absrel_weight=0.0,
+        silog_weight=0.0,
+        nll_weight=0.0,
+        fwd_overread_hinge_weight=1.0,
+        center_frac=0.5,
+        trigger_m=3.0,
+    )
+    assert s_under["fwd_overread_hinge"] == pytest.approx(0.0, abs=1e-5)
+    assert s_over["fwd_overread_hinge"] == pytest.approx(1.0, abs=1e-4)
+    assert s_over["fwd_hinge_hard"] == pytest.approx(1.0, abs=1e-4)
+
+
+def test_softmin_matches_hardmin_as_T_goes_to_zero():
+    from experiments.aerial.rl.depth_geometry import forward_min_depth_torch
+
+    d = torch.rand(2, 16, 16) * 20 + 1.0
+    hard = forward_min_depth_torch(d, center_frac=0.5, softmin_temperature_m=0.0)
+    soft = forward_min_depth_torch(d, center_frac=0.5, softmin_temperature_m=0.01)
+    # Softmin ≥ hard min; small T keeps them close.
+    assert torch.all(soft >= hard - 1e-3)
+    assert torch.allclose(hard, soft, rtol=0.15, atol=0.5)
+
+
+def test_near_fwd_absrel_pinball_emphasizes_tail():
+    H = W = 16
+    gt = torch.ones(1, H, W) * 10.0
+    gt[:, 4:12, 4:12] = 2.0
+    log_sigma = torch.zeros_like(gt)
+    mild = gt.clone()
+    mild[:, 4:12, 4:12] = 2.2
+    wild = gt.clone()
+    wild[:, 4:12, 4:12] = 2.2
+    wild[:, 6:8, 6:8] = 8.0  # bad AbsRel in forward crop
+    _, s_mild = depth_head_loss(
+        mild,
+        log_sigma,
+        gt,
+        absrel_weight=0.0,
+        silog_weight=0.0,
+        nll_weight=0.0,
+        near_fwd_absrel_pinball_weight=1.0,
+        near_fwd_absrel_pinball_tau=0.9,
+        center_frac=0.5,
+        near_focus_m=5.0,
+    )
+    _, s_wild = depth_head_loss(
+        wild,
+        log_sigma,
+        gt,
+        absrel_weight=0.0,
+        silog_weight=0.0,
+        nll_weight=0.0,
+        near_fwd_absrel_pinball_weight=1.0,
+        near_fwd_absrel_pinball_tau=0.9,
+        center_frac=0.5,
+        near_focus_m=5.0,
+    )
+    assert s_wild["near_fwd_absrel_pinball"] > s_mild["near_fwd_absrel_pinball"]
+
+
+def test_fwd_hard_cache_rejects_undersized_and_fills_batch():
+    far = _const_depth_window([10.0] * 8)
+    near = _const_depth_window([2.0] * 8)
+    cache = build_fwd_hard_window_cache(
+        [far, near], window=4, center_frac=0.5, trigger_m=3.0
+    )
+    assert len(cache) >= 1
+    assert all(
+        float(w[-1].obs.depth.mean()) <= 3.0 for w in cache
+    )
+    with pytest.raises(ValueError, match="fwd hard cache"):
+        sample_fwd_hard_windows(cache[:0], batch=4, min_n_fwd=4, rng=np.random.default_rng(0))
+    batch = sample_fwd_hard_windows(cache, batch=4, min_n_fwd=1, rng=np.random.default_rng(0))
+    assert len(batch) == 4
+
+
+def test_delta_scale_loss_approach_gate_skips_flat_windows():
+    """Flat GT Δ must not contribute (prevents AbsRel-killing noise)."""
+    B, H, W = 2, 8, 8
+    gt0 = torch.ones(B, H, W) * 10.0
+    gt1 = gt0.clone()  # Δ = 0
+    pred0 = gt0.clone().requires_grad_(True)
+    pred1 = (gt0 * 1.1).requires_grad_(True)
+    loss, stats = depth_delta_scale_loss(
+        pred0, pred1, gt0, gt1, min_gt_delta_m=0.5, min_depth_m=1.0, max_depth_m=40.0
+    )
+    assert stats["n_delta"] == 0
+    assert loss.item() == 0.0
+
+
+def test_delta_scale_loss_penalizes_wrong_approach_delta():
+    B, H, W = 2, 8, 8
+    gt0 = torch.ones(B, H, W) * 20.0
+    gt1 = torch.ones(B, H, W) * 10.0  # |Δ| = 10 m (approach)
+    pred_good0 = gt0.clone()
+    pred_good1 = gt1.clone()
+    pred_bad0 = gt0.clone()
+    pred_bad1 = gt0.clone()  # predicted Δ ≈ 0
+    good, s_good = depth_delta_scale_loss(
+        pred_good0, pred_good1, gt0, gt1, min_gt_delta_m=0.5
+    )
+    bad, s_bad = depth_delta_scale_loss(
+        pred_bad0, pred_bad1, gt0, gt1, min_gt_delta_m=0.5
+    )
+    assert s_good["n_delta"] == B and s_bad["n_delta"] == B
+    assert float(good.item()) < float(bad.item())
+    # Gradients must flow through band-mean (regression vs nanmedian collapse).
+    pred = gt0.clone().requires_grad_(True)
+    loss, _ = depth_delta_scale_loss(pred, gt1.clone(), gt0, gt1, min_gt_delta_m=0.5)
+    loss.backward()
+    assert pred.grad is not None and torch.isfinite(pred.grad).all()
+
+
+def test_delta_scale_loss_respects_motion_support_ratio():
+    B, H, W = 2, 8, 8
+    gt0 = torch.ones(B, H, W) * 12.0
+    gt1 = torch.ones(B, H, W) * 10.0  # |Δ| = 2
+    pred0, pred1 = gt0.clone(), gt1.clone()
+    # motion=10 → need ŝ ≥ 0.6*10=6; 2 < 6 → gated out
+    loss, stats = depth_delta_scale_loss(
+        pred0,
+        pred1,
+        gt0,
+        gt1,
+        min_gt_delta_m=0.5,
+        motion_m=torch.tensor([10.0, 10.0]),
+        support_ratio=0.6,
+    )
+    assert stats["n_delta"] == 0
+    assert loss.item() == 0.0
+    # motion=2 → need ŝ ≥ 1.2; 2 ≥ 1.2 → kept
+    loss2, stats2 = depth_delta_scale_loss(
+        pred0,
+        pred1,
+        gt0,
+        gt1,
+        min_gt_delta_m=0.5,
+        motion_m=torch.tensor([2.0, 2.0]),
+        support_ratio=0.6,
+    )
+    assert stats2["n_delta"] == B
+    assert torch.isfinite(loss2)
+
+
+def _const_depth_window(
+    depths_m: list[float], *, hw: int = 4, dx: float = 1.0
+) -> list[Transition]:
+    """Build a length-L window with constant per-frame depth and forward motion."""
+    out: list[Transition] = []
+    for i, d in enumerate(depths_m):
+        depth = np.full((hw, hw), float(d), dtype=np.float32)
+        rgb = np.zeros((hw, hw, 3), dtype=np.uint8)
+        state = np.array([i * dx, 0.0, 2.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32)
+        obs = Observation(rgb=rgb, state=state, depth=depth)
+        out.append(
+            Transition(obs=obs, action=np.zeros(4, np.float32), reward=0.0, done=False)
+        )
+    return out
+
+
+def test_approach_sampler_scores_loss_interval_not_window_start():
+    """With n_f>1, rank on depth[:, n_f-1] vs [:, -1] (Δ-loss endpoints), not [0, -1].
+
+    Window A: large |Δ| on [0, L-1] but flat on [n_f-1, L-1] → must lose.
+    Window B: approach alive on [n_f-1, L-1] → must win.
+    """
+    L, n_f = 8, 4
+    # A: early approach then flat from frame 3..7 → |Δ[0,7]|=20, |Δ[3,7]|=0
+    win_a = _const_depth_window([30.0, 20.0, 15.0, 10.0, 10.0, 10.0, 10.0, 10.0])
+    # B: flat until n_f-1, then approach → |Δ[0,7]|=10, |Δ[3,7]|=10
+    win_b = _const_depth_window([20.0, 20.0, 20.0, 20.0, 17.0, 14.0, 12.0, 10.0])
+    buf = ReplayBuffer(capacity_episodes=2, seed=0)
+    # sample_windows is stubbed below; episodes only need to exist.
+    buf.add_episode(win_a)
+    buf.add_episode(win_b)
+
+    candidates = [win_a, win_b, win_a, win_b]  # oversample=4, batch=1 → n_cand=4
+    buf.sample_windows = lambda n, length: candidates[: int(n)]  # type: ignore[method-assign]
+
+    picked = _sample_approach_biased_windows(
+        buf,
+        batch=1,
+        window=L,
+        oversample=4,
+        min_depth_m=1.0,
+        max_depth_m=40.0,
+        min_gt_delta_m=0.5,
+        support_ratio=0.0,
+        n_frames=n_f,
+    )
+    assert len(picked) == 1
+    # Identify by first-frame depth: A starts at 30, B at 20.
+    assert float(picked[0][0].obs.depth.mean()) == pytest.approx(20.0)
+
+
+def test_freeze_encoder_no_grad_and_optimizer_excludes_encoder():
+    """Decoder-only FT: encoder requires_grad=False and absent from AdamW."""
+    model = _DepthHead(image_size=16, n_frames=2, base=8)
+    trainable = _apply_freeze_encoder(model, freeze=True)
+    assert trainable, "decoder must still expose trainable params"
+    for p in model.encoder.parameters():
+        assert p.requires_grad is False
+    for p in model.decoder.parameters():
+        assert p.requires_grad is True
+    train_ids = {id(p) for p in trainable}
+    for p in model.encoder.parameters():
+        assert id(p) not in train_ids
+    for p in model.decoder.parameters():
+        assert id(p) in train_ids
+    opt = torch.optim.AdamW(trainable, lr=1e-4)
+    opt_ids = {id(p) for g in opt.param_groups for p in g["params"]}
+    assert opt_ids == train_ids
+    # Gradients must not accumulate on frozen encoder after a backward.
+    rgb = torch.rand(1, 2, 16, 16, 3)
+    pred, log_sigma = model.predict_from_window(rgb)
+    loss = pred.mean() + log_sigma.mean()
+    loss.backward()
+    for p in model.encoder.parameters():
+        assert p.grad is None
+    assert any(p.grad is not None for p in model.decoder.parameters())
+
+
+def test_unfreeze_encoder_restores_full_trainable_set():
+    model = _DepthHead(image_size=16, n_frames=2, base=8)
+    _apply_freeze_encoder(model, freeze=True)
+    trainable = _apply_freeze_encoder(model, freeze=False)
+    assert all(p.requires_grad for p in model.parameters())
+    assert {id(p) for p in trainable} == {id(p) for p in model.parameters()}
+
+
+def test_depth_cfg_defaults_to_effective_grad_clip(tmp_path):
+    config = tmp_path / "minimal.yaml"
+    config.write_text("world_model:\n  depth_head: {}\n")
+    assert _load_depth_cfg(config)["grad_clip"] == pytest.approx(5.0)
+
+
+def test_depth_head_base64_forward_shapes():
+    """Capacity-lift width (base=64) must keep [1b] D̂/logσ spatial contract."""
+    model = _DepthHead(image_size=16, n_frames=2, base=64)
+    rgb = torch.randint(0, 256, (1, 3, 16, 16, 3), dtype=torch.uint8)
+    depth, log_sigma = model.predict_from_window(rgb)
+    assert depth.shape == (1, 16, 16)
+    assert log_sigma.shape == (1, 16, 16)
+    assert torch.all(depth > 0)
+    # Wider net should expose more params than base=32 at same spatial size.
+    n64 = sum(p.numel() for p in model.parameters())
+    n32 = sum(p.numel() for p in _DepthHead(image_size=16, n_frames=2, base=32).parameters())
+    assert n64 > n32
+
+
+def test_base_cli_wins_over_yaml(monkeypatch, tmp_path):
+    cfg = {
+        "n_frames": 4,
+        "base": 32,
+        "delta_weight": 0.0,
+        "approach_oversample": 1,
+        "enable": False,
+        "image_size": 16,
+        "lr": 1.0e-4,
+        "grad_clip": 5.0,
+        "absrel_weight": 1.0,
+        "nll_weight": 0.1,
+        "max_depth_m": 200.0,
+        "scale_depth_min_m": 1.0,
+        "scale_depth_max_m": 40.0,
+        "freeze_encoder": False,
+        "checkpoint_dir": str(tmp_path / "ckpt"),
+    }
+    monkeypatch.setattr(
+        "experiments.aerial.rl.train_depth_head._refuse_bad_corpus",
+        lambda root, allow: None,
+    )
+    monkeypatch.setattr(
+        "experiments.aerial.rl.train_depth_head._load_depth_cfg",
+        lambda path: cfg,
+    )
+
+    def stop_after_overrides(root, window):
+        assert cfg["base"] == 64
+        raise RuntimeError("base override observed")
+
+    monkeypatch.setattr(
+        "experiments.aerial.rl.train_depth_head._usable_episodes",
+        stop_after_overrides,
+    )
+    with pytest.raises(RuntimeError, match="base override observed"):
+        train_depth_main(
+            [
+                "--dataset",
+                str(tmp_path),
+                "--device",
+                "cpu",
+                "--base",
+                "64",
+                "--approach-oversample",
+                "1",
+            ]
+        )
+
+
+def test_init_ckpt_base32_refuses_base64(tmp_path, monkeypatch, capsys):
+    """Strict load must FAIL clearly — never silently partial-load base-32 → 64."""
+    narrow = _DepthHead(image_size=16, n_frames=2, base=32)
+    ckpt = tmp_path / "depth_step_1.pt"
+    torch.save(
+        {
+            "model": narrow.state_dict(),
+            "n_frames": 2,
+            "image_size": 16,
+            "base": 32,
+        },
+        ckpt,
+    )
+    cfg = {
+        "n_frames": 2,
+        "base": 64,
+        "delta_weight": 0.0,
+        "approach_oversample": 1,
+        "enable": False,
+        "image_size": 16,
+        "lr": 1.0e-4,
+        "grad_clip": 5.0,
+        "absrel_weight": 1.0,
+        "nll_weight": 0.1,
+        "max_depth_m": 200.0,
+        "scale_depth_min_m": 1.0,
+        "scale_depth_max_m": 40.0,
+        "freeze_encoder": False,
+        "checkpoint_dir": str(tmp_path / "out"),
+    }
+    monkeypatch.setattr(
+        "experiments.aerial.rl.train_depth_head._refuse_bad_corpus",
+        lambda root, allow: None,
+    )
+    monkeypatch.setattr(
+        "experiments.aerial.rl.train_depth_head._load_depth_cfg",
+        lambda path: cfg,
+    )
+    monkeypatch.setattr(
+        "experiments.aerial.rl.train_depth_head._usable_episodes",
+        lambda root, window: [tmp_path / "ep0"],
+    )
+    monkeypatch.setattr(
+        "experiments.aerial.rl.train_depth_head._split_train_holdout",
+        lambda eps, holdout_frac, seed: (eps, eps, {"regime": "test", "n_holdout": 0}),
+    )
+
+    class _FakeBuf:
+        def __len__(self):
+            return 1
+
+    monkeypatch.setattr(
+        "experiments.aerial.rl.train_depth_head._buffer_from",
+        lambda eps, tag, window: _FakeBuf(),
+    )
+    rc = train_depth_main(
+        [
+            "--dataset",
+            str(tmp_path),
+            "--device",
+            "cpu",
+            "--base",
+            "64",
+            "--init-ckpt",
+            str(ckpt),
+            "--steps",
+            "1",
+        ]
+    )
+    assert rc == 1
+    err = capsys.readouterr().err
+    assert "arch mismatch" in err
+    assert "base=64" in err
+
+
+def test_approach_oversample_cli_wins_over_yaml(monkeypatch, tmp_path):
+    cfg = {
+        "n_frames": 4,
+        "delta_weight": 0.0,
+        "approach_oversample": 4,
+        "enable": False,
+    }
+    monkeypatch.setattr(
+        "experiments.aerial.rl.train_depth_head._refuse_bad_corpus",
+        lambda root, allow: None,
+    )
+    monkeypatch.setattr(
+        "experiments.aerial.rl.train_depth_head._load_depth_cfg",
+        lambda path: cfg,
+    )
+
+    def stop_after_overrides(root, window):
+        assert cfg["approach_oversample"] == 1
+        raise RuntimeError("override observed")
+
+    monkeypatch.setattr(
+        "experiments.aerial.rl.train_depth_head._usable_episodes",
+        stop_after_overrides,
+    )
+    with pytest.raises(RuntimeError, match="override observed"):
+        train_depth_main(
+            [
+                "--dataset",
+                str(tmp_path),
+                "--device",
+                "cpu",
+                "--approach-oversample",
+                "1",
+                "--eval-every",
+                "50",
+            ]
+        )

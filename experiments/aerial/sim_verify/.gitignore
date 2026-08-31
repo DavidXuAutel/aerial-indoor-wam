@@ -1,0 +1,17 @@
+# This project intentionally ships lib/ and requirements.txt, which the repo-root
+# .gitignore excludes (lib/, *.txt). Re-include them here.
+!requirements.txt
+!lib/
+!lib/**
+
+# Never commit local runtime products.
+config.env
+artifacts/
+# Keep Phase-1 evidence on the branch (otherwise machine switch loses reports).
+!artifacts/phase1_125_*
+!artifacts/l2f_clean_retest.json
+!artifacts/l2f_clean_retest_224.json
+!artifacts/l2f_crossnet_224_from_h100.json
+!artifacts/phase2_rl_rollout_topology.md
+__pycache__/
+*.pyc

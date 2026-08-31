@@ -1,0 +1,16 @@
+artifacts/
+logs/
+tmp_*/
+**/__pycache__/
+*.pyc
+.DS_Store
+._*
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.npz
+*.bin
+*.safetensors
+.env
+.venv/

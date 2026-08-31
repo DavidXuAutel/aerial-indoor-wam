@@ -1,0 +1,66 @@
+# Aerial WAM Indoor Lossless Verification Configuration (Step 1)
+# Zero-retraining evaluation for micro-scale spaces and 0.xm arrival precision.
+
+env:
+  backend: airsim
+  host: 127.0.0.1
+  port: 41451
+  camera: front_custom
+  vehicle: drone_1
+  width: 224
+  height: 224
+  step_hz: 5.0
+  grab_depth: true
+  health_check: true
+  seed: 0
+
+reward:
+  w_progress: 1.0
+  w_collision: 10.0
+  w_maneuver: 0.01
+  success_bonus: 10.0
+  # Tightened from outdoor 3.0m to indoor 0.xm target (0.5m)
+  success_dist_m: 0.5
+
+# Micro-Scale Physical Continuous-Control Limits
+# Outdoor default: [1.0, 0.4, 0.4, 0.314] m/step
+# Indoor micro-scale: [0.15, 0.08, 0.08, 0.10] m/step (@ 5Hz -> max 0.75m/s fwd, 0.40m/s lat/vert, 0.50rad/s yaw)
+action_limits:
+  max_dx: 0.15
+  max_dy: 0.08
+  max_dz: 0.08
+  max_dyaw: 0.10
+
+safety:
+  # Micro Three-Zone Speed Governor
+  # Outdoor default: 8.0 / 5.0 / 1.5 m @ 2.0 / 1.0 / 0.2 m/s, retreat 3.0m
+  # Indoor micro-scale: 1.5 / 0.8 / 0.4 m @ 0.6 / 0.3 / 0.05 m/s, retreat 0.3m
+  kind: three_zone
+  l1_m: 1.5                  # outer warning line (0.6 m/s cap)
+  l2_m: 0.8                  # mid speed line (0.3 m/s cap)
+  l3_m: 0.4                  # inner stop line (0.05 m/s brake)
+  v1_m_s: 0.6
+  v2_m_s: 0.3
+  v_stop_m_s: 0.05
+  v_cruise_m_s: 1.0
+  a_max_m_s2: 1.5
+  delay_s: 0.1
+  min_tau_s: 0.5
+  max_p_coll: 0.5
+  retreat_step_m: 0.3        # gentle 30cm retreat in confined spaces
+
+world_model:
+  recurrent_dim: 512
+  stoch_dim: 32
+  stoch_classes: 32
+  pred_transform: symlog
+  reward_head: two_hot
+  num_bins: 255
+  bin_lo: -20.0
+  bin_hi: 20.0
+  free_bits: 1.0
+  reward_dt: 0.2
+
+planner:
+  enable: true
+  horizon: 5

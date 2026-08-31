@@ -1,0 +1,7 @@
+# Client-side deps for the sim-capability probes. The `airsim` package is a
+# pure-python RPC client, so it runs on the H100 client and talks to the 4090
+# renderer over the network. Prefer headless OpenCV on GPU pods (no libGL).
+airsim>=1.8.1
+numpy>=1.23
+opencv-python-headless>=4.6
+msgpack-rpc-python>=0.4.1

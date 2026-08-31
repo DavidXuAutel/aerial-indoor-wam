@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aerial-wam-v2"
+version = "0.2.0"
+description = "Aerial WAM v2 pure-vision V0 gate (RSSM + DA3 depth + AirSim)"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.26,<2",
+  "pyyaml>=6.0",
+  "opencv-python-headless>=4.8",
+  "msgpack-rpc-python>=0.4",
+  "einops>=0.8",
+  "addict>=2.4",
+  "safetensors>=0.4",
+  "pytest>=7.0",
+]
+
+[project.optional-dependencies]
+gpu = [
+  "torch>=2.7",
+  "torchvision>=0.22",
+]
+airsim = [
+  "airsim>=1.8",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["experiments*"]
+
+[tool.pytest.ini_options]
+testpaths = ["experiments/aerial/rl/tests", "experiments/aerial/sim_verify/tests"]
+pythonpath = ["."]

@@ -1,0 +1,52 @@
+# E2h baseline shield profile (matches pre-E2i hardcoded ThreeZoneSpec in eval/collect).
+# Use for E2i.1 A/B "old" arm. Tunable copy → aerial_rl_indoor_shield_v2.yaml for "new" arm.
+
+env:
+  backend: airsim
+  host: 127.0.0.1
+  port: 41451
+  camera: front_custom
+  vehicle: drone_1
+  width: 224
+  height: 224
+  step_hz: 5.0
+  grab_depth: true
+  health_check: false
+  seed: 0
+
+reward:
+  w_progress: 1.0
+  w_collision: 10.0
+  w_maneuver: 0.01
+  success_bonus: 10.0
+  success_dist_m: 0.5
+
+action_limits:
+  max_dx: 0.15
+  max_dy: 0.08
+  max_dz: 0.08
+  max_dyaw: 0.10
+
+safety:
+  kind: three_zone
+  l1_m: 1.5
+  l2_m: 0.8
+  l3_m: 0.4
+  v1_m_s: 0.6
+  v2_m_s: 0.3
+  v_stop_m_s: 0.05
+  v_cruise_m_s: 1.0
+  a_max_m_s2: 1.5
+  delay_s: 0.1
+  min_tau_s: 0.5
+  max_p_coll: 0.5
+  retreat_step_m: 0.3
+
+world_model:
+  recurrent_dim: 512
+  stoch_dim: 32
+  stoch_classes: 32
+
+planner:
+  enable: true
+  horizon: 5

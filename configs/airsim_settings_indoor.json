@@ -1,0 +1,111 @@
+{
+  "SeeDocsAt": "https://github.com/Microsoft/AirSim/blob/main/docs/settings.md",
+  "SettingsVersion": 1.2,
+  "SimMode": "Multirotor",
+  "ClockSpeed": 1.0,
+  "CameraDefaults": {
+    "CaptureSettings": [
+      {
+        "ImageType": 0,
+        "Width": 224,
+        "Height": 224,
+        "FOV_Degrees": 90,
+        "AutoExposureSpeed": 100,
+        "MotionBlurAmount": 0
+      },
+      {
+        "ImageType": 1,
+        "Width": 224,
+        "Height": 224,
+        "FOV_Degrees": 90
+      },
+      {
+        "ImageType": 2,
+        "Width": 224,
+        "Height": 224,
+        "FOV_Degrees": 90
+      }
+    ]
+  },
+  "Vehicles": {
+    "drone_1": {
+      "VehicleType": "SimpleFlight",
+      "DefaultVehicleState": "Armed",
+      "EnableCollisions": true,
+      "AllowAPIAlways": true,
+      "X": 0,
+      "Y": 0,
+      "Z": 0,
+      "Yaw": 0,
+      "Cameras": {
+        "0": {
+          "CaptureSettings": [
+            {
+              "ImageType": 0,
+              "Width": 224,
+              "Height": 224,
+              "FOV_Degrees": 90
+            },
+            {
+              "ImageType": 1,
+              "Width": 224,
+              "Height": 224,
+              "FOV_Degrees": 90
+            }
+          ],
+          "X": 0.3,
+          "Y": 0.0,
+          "Z": 0.0,
+          "Pitch": 0.0,
+          "Roll": 0.0,
+          "Yaw": 0.0
+        },
+        "front_custom": {
+          "CaptureSettings": [
+            {
+              "ImageType": 0,
+              "Width": 224,
+              "Height": 224,
+              "FOV_Degrees": 90
+            },
+            {
+              "ImageType": 1,
+              "Width": 224,
+              "Height": 224,
+              "FOV_Degrees": 90
+            }
+          ],
+          "X": 0.3,
+          "Y": 0.0,
+          "Z": 0.0,
+          "Pitch": 0.0,
+          "Roll": 0.0,
+          "Yaw": 0.0
+        }
+      },
+      "Sensors": {
+        "Imu": {
+          "SensorType": 2,
+          "Enabled": true
+        },
+        "Barometer": {
+          "SensorType": 1,
+          "Enabled": true
+        },
+        "Distance": {
+          "SensorType": 5,
+          "Enabled": true,
+          "MinDistance": 0.2,
+          "MaxDistance": 40,
+          "X": 0,
+          "Y": 0,
+          "Z": 0,
+          "Yaw": 0,
+          "Pitch": -90,
+          "Roll": 0,
+          "DrawDebugPoints": false
+        }
+      }
+    }
+  }
+}

@@ -8,7 +8,7 @@
 
 ## 一句话
 
-E2h ❌ 结案。**dt 已修；F1/F2 ✅**（v3 interv **0.048**≪0.5，d_end↓47.8%）。**E2i.1 正式过 → 解禁 B1**。致命残留见缺陷文档 F1/F2/F4。禁 E3。
+E2h ❌。**C1 FT ✅**。**@0.50 eval 进行中**。禁 E3。
 
 ## 勾选
 
@@ -17,15 +17,12 @@ E2h ❌ 结案。**dt 已修；F1/F2 ✅**（v3 interv **0.048**≪0.5，d_end�
 | E2h | ❌ 场景合格；合同/shield-off 见计划 §8 |
 | **E2i.0** 计划 v2 落盘 | ✅ |
 | **E2i.0w** yaml 罩 + 近成功接线 | ✅ |
-| **E2i.1** 室内罩 A/B | ✅ **post-dtfix**：v3 vs baseline — interv **0.048 vs 0.706**；d_end↓**47.8%**；gate 全过。summary `artifacts/indoor_shield_ab_summary_post_dtfix_20260831.json` |
-| **E2i.1b** shield_v3 | ✅ 并入 F2（new=v3） |
-| **E2i.diag** 介入通道 | ✅ 根因 dt；修后 F1 interv=**0.00×4** |
-| **E2i.dtfix** | ✅ F0/F1/F2 全过；方案 [`INDOOR_E2I_DTFIX_PLAN_20260831.md`](INDOOR_E2I_DTFIX_PLAN_20260831.md) |
-| **F1** 通道诊断 post-dtfix | ✅ interv=0.00×4；`indoor_shield_channel_diag_v3_post_dtfix_20260831.json` |
-| **F2** 罩 A/B post-dtfix | ✅ gate_intervention_lt_0_5 + gate_d_end_improve_gt_30pct |
+| **E2i.1** 室内罩 A/B | ✅ post-dtfix v3 interv **0.048**；d_end↓47.8% |
+| **E2i.1b** shield_v3 | ✅ |
+| **E2i.diag / dtfix** | ✅ |
 | **E2i.2a** B2 夹具 @0.20 | ✅ **34 arrived** |
-| **E2i.2b** B1 | 🔄 **采集中** — assist=none + v3 + keep-near-success≤1.0 + drop-collided；目标 usable≥50 / 120 ep → `dataset_indoor_b99_none_near_20260831`；log `logs/e2i_b1_none_near_20260831.log` |
-| **E2i.3** C1 短 FT @0.50 @4090 | ⬜ |
+| **E2i.2b** B1 | ✅ **usable=62 ≥50** → `dataset_indoor_b99_none_near_20260831` |
+| **E2i.3** C1 短 FT @0.50 @4090 | ✅ FT 完成；🔄 **@0.50 罩 ON eval 进行中**（8×3 seed）→ log `logs/e2i_c1_eval_050_20260831.log` |
 | **E2i.4** C1/C2 H100 长 FT | ⬜ |
 | E3 | ⛔ 禁止 |
 

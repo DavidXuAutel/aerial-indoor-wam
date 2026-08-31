@@ -269,6 +269,11 @@ def main() -> int:
         default=30,
         help="Fail if usable < this (fixture BC often uses lower bar e.g. 15)",
     )
+    parser.add_argument(
+        "--append",
+        action="store_true",
+        help="Append to existing out-dir (keep prior NPZ; merge manifest/summary)",
+    )
     parser.add_argument("--episodes", type=int, default=30)
     parser.add_argument("--out", default="experiments/aerial/rl/artifacts/dataset_indoor_loop_e1_gtproxy_20260829")
     args = parser.parse_args()
@@ -356,13 +361,37 @@ def main() -> int:
     out_dir = Path(args.out) if Path(args.out).is_absolute() else root / args.out
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    prior_manifest: List[Dict[str, Any]] = []
+    prior_reports: List[Dict[str, Any]] = []
+    prior_quality: List[Dict[str, Any]] = []
+    ep_idx = 0
+    if args.append:
+        existing = sorted(out_dir.glob("episode_*.npz"))
+        ep_idx = len(existing)
+        summary_path = out_dir / "collection_summary.json"
+        if summary_path.is_file():
+            old = json.loads(summary_path.read_text(encoding="utf-8"))
+            prior_reports = list(old.get("episodes") or [])
+        manifest_path = out_dir / "manifest.json"
+        if manifest_path.is_file():
+            old_m = json.loads(manifest_path.read_text(encoding="utf-8"))
+            if isinstance(old_m, dict):
+                prior_manifest = list(old_m.get("episodes") or old_m.get("manifest") or [])
+            elif isinstance(old_m, list):
+                prior_manifest = old_m
+        qpath = out_dir / "QUALITY_SUMMARY.json"
+        if qpath.is_file():
+            prior_quality = json.loads(qpath.read_text(encoding="utf-8"))
+            if not isinstance(prior_quality, list):
+                prior_quality = []
+        logger.info("append mode: prior_npz=%d start_idx=%d", ep_idx, ep_idx)
+
     manifest: List[Dict[str, Any]] = []
     reports: List[Dict[str, Any]] = []
     quality_reports: List[Dict[str, Any]] = []
     failures: List[str] = []
     quarantined: List[str] = []
     skipped = 0
-    ep_idx = 0
 
     try:
         for seg in plan:
@@ -448,8 +477,12 @@ def main() -> int:
         if callable(close):
             close()
 
-    n = len(manifest)
-    usable = sum(1 for m in manifest if m.get("usable"))
+    all_manifest = prior_manifest + manifest
+    all_reports = prior_reports + reports
+    all_quality = prior_quality + quality_reports
+    n = len(all_manifest)
+    usable = sum(1 for m in all_manifest if m.get("usable"))
+    usable_new = sum(1 for m in manifest if m.get("usable"))
     meta = {
         "protocol": (
             "indoor_fixture_bc_E2h_building99"
@@ -472,6 +505,9 @@ def main() -> int:
         "bc_tag": args.bc_tag or None,
         "bc_from": args.bc_tag or ("fixture_gt_pd" if args.allow_gt_assist else None),
         "keep_arrived_only": bool(args.keep_arrived_only),
+        "keep_near_success": bool(args.keep_near_success),
+        "near_success_max_m": float(args.near_success_max_m) if args.keep_near_success else None,
+        "drop_collided": bool(args.drop_collided),
         "max_intervention_rate": args.max_intervention_rate,
         "success_dist_m": args.success_dist,
         "segment_len_m": args.segment_len_m,
@@ -484,6 +520,8 @@ def main() -> int:
         "n_requested": args.episodes,
         "n_collected": n,
         "n_usable": usable,
+        "n_usable_new": usable_new,
+        "append": bool(args.append),
         "skipped_spawn_collision": skipped,
         "actor_ckpt": str(args.actor_ckpt),
         "wm_ckpt": str(args.wm_ckpt),
@@ -493,26 +531,30 @@ def main() -> int:
             if args.allow_gt_assist else None
         ),
     }
-    ds.write_manifest(out_dir, manifest, meta=meta)
-    ds.write_quality_summary(out_dir, quality_reports)
+    ds.write_manifest(out_dir, all_manifest, meta=meta)
+    ds.write_quality_summary(out_dir, all_quality)
 
     summary_path = out_dir / "collection_summary.json"
     summary_path.write_text(json.dumps({
         "meta": meta,
         "n_usable": usable,
         "n_collected": n,
+        "n_usable_new": usable_new,
         "arrival_rate_gt": round(
-            sum(1 for r in reports if r.get("arrived_gt")) / max(n, 1), 4
+            sum(1 for r in all_reports if r.get("arrived_gt")) / max(n, 1), 4
         ),
         "mean_d_end_gt": round(
-            float(np.mean([r["d_end_m_gt"] for r in reports])), 4
-        ) if reports else None,
+            float(np.mean([r["d_end_m_gt"] for r in all_reports if r.get("d_end_m_gt") is not None])), 4
+        ) if all_reports else None,
         "episodes": [{k: r[k] for k in (
             "segment_name", "route_name", "steps", "d_end_m_gt", "d_end_m_hat",
             "arrived_gt", "collided", "intervention_rate", "pose_source",
-        ) if k in r} for r in reports],
+        ) if k in r} for r in all_reports],
     }, indent=2), encoding="utf-8")
-    logger.info("Wrote %d episodes (%d usable) -> %s", n, usable, out_dir)
+    logger.info(
+        "Wrote %d episodes (%d usable, +%d new) -> %s",
+        n, usable, usable_new, out_dir,
+    )
 
     if failures:
         for f in failures:
@@ -521,7 +563,7 @@ def main() -> int:
     if n == 0:
         logger.error("FAIL: 0 episodes collected")
         return 1
-    if usable < int(args.min_usable) and args.backend == "airsim" and args.episodes >= int(args.min_usable):
+    if usable < int(args.min_usable) and args.backend == "airsim":
         logger.error("FAIL: n_usable=%d < %d gate", usable, args.min_usable)
         return 1
     return 0

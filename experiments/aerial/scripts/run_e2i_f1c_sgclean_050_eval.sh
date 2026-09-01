@@ -159,9 +159,13 @@ g3 = (coll_rate <= 0.50) and (arr_collided == 0)
 g4 = True
 primary_pass = g1 and g2 and g3 and g4
 meta = {}
-mp = Path("artifacts/building99_indoor_short_routes_clean_sg.meta.json")
-if mp.is_file():
-    meta = json.loads(mp.read_text())
+for mp in (
+    Path("artifacts/building99_indoor_short_routes_clean_sg.meta.json"),
+    Path("building99_indoor_short_routes_clean_sg.meta.json"),
+):
+    if mp.is_file():
+        meta = json.loads(mp.read_text())
+        break
 out = {
     "protocol": "e2i_f1c_sgclean",
     "contract": "INDOOR_E2I_F_PLAN_20260901.md + clearance audit",

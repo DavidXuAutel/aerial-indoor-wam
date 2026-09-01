@@ -3,7 +3,7 @@
 > **用途**：回答「现在该读哪些活文档」。只列**仍在维护 / 决定现状**的入口；历史备忘与已闭合细节按需下钻。  
 > **防误读**：`RUNBOOK_v0.md` §8 晚¹⁹–²² / 任何「merge 从未 exit 0」叙述 = **2026-08-12 快照**，不是现状（V0 已于 08-14 merge PASS）。  
 > **2026-08-28**：本仓若在跑 **室内 0.xm** 轨，优先读下方 **A0**，勿把 GT-PD demo 成绩写进 V4/WAM 主线完成态。  
-> **2026-08-31**：室内 **E2h FAIL**；E2i.1/F2 ✅；致命缺陷见 [`INDOOR_FATAL_DEFECTS_20260831.md`](INDOOR_FATAL_DEFECTS_20260831.md)；现刀 = **E2i B1→分阶 FT**；**E3 须人令**。
+> **2026-09-01**：室内 **E2i.C = S3→S1→S2**（人令已锁）见 [`INDOOR_E2I_C_PLAN_20260901.md`](INDOOR_E2I_C_PLAN_20260901.md)；**E3 须人令**。
 
 ---
 
@@ -11,15 +11,15 @@
 
 | 顺序 | 文档 | 读什么 |
 |---|---|---|
-| **1** | [`INDOOR_FATAL_DEFECTS_20260831.md`](INDOOR_FATAL_DEFECTS_20260831.md) | **致命缺陷**：F1–F5 结构断裂 vs 可修债 |
-| **2** | [`INDOOR_E2I_PLAN_20260831.md`](INDOOR_E2I_PLAN_20260831.md) | **分析+计划 v2**：问题链、解法链、命令 |
-| **3** | [`../../experiments/aerial/RUNBOOK_indoor_0xm.md`](../../experiments/aerial/RUNBOOK_indoor_0xm.md) | **权威**：§8.9 **E2i** |
-| 4 | [`INDOOR_0XM_STATUS.md`](INDOOR_0XM_STATUS.md) | **下一步 = E2i**（B1 已解禁） |
-| 5 | [`INDOOR_MAINLINE_125_PROMPT_20260831.md`](INDOOR_MAINLINE_125_PROMPT_20260831.md) | 125 当前战役 |
+| **1** | [`INDOOR_E2I_C_PLAN_20260901.md`](INDOOR_E2I_C_PLAN_20260901.md) | **当前刀 = C**：S3→S1→S2 |
+| **2** | [`INDOOR_0XM_STATUS.md`](INDOOR_0XM_STATUS.md) | 勾选 / S3 跑中 |
+| **3** | [`INDOOR_E2I_B_POSTMORTEM_20260901.md`](INDOOR_E2I_B_POSTMORTEM_20260901.md) | B 失败拆因 |
+| **4** | [`INDOOR_FULL_STACK_20260831.md`](INDOOR_FULL_STACK_20260831.md) | 方案/模型/接线快照 |
+| **5** | [`../../experiments/aerial/RUNBOOK_indoor_0xm.md`](../../experiments/aerial/RUNBOOK_indoor_0xm.md) | §8.9 E2i |
 
-**现状一句话（08-31）**：dt/罩 F2 已过；B1 解禁。致命残留 = **夹具主料（F1）+ gt_proxy 合同（F2）+ 域尺度（F4）**。禁 E3。  
+**现状一句话（09-01）**：**E2i.C S3 在 125 跑**（A vs B @0.50 定主头）。B@0.20 已废。E3 仍禁。  
 
-**禁止**：关罩当完成态；夹具成绩当完成态；GT-PD 作默认飞行核；无人令开 E3；再堆 0.50 BC 冒充进展。
+**禁止**：关罩当完成态；夹具成绩当完成态；GT-PD 作默认飞行核；无人令开 E3；同款近场 BC 碰运气。
 
 ---
 

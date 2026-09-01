@@ -1,50 +1,27 @@
 # Indoor WAM — STATUS（主航道）
 
-> **Workspace**：`/home/yao/aerial-indoor-wam`  
-> **权威**：`RUNBOOK_indoor_0xm.md` §8.9 **E2i**  
-> **完整快照（方案+模型+接线）**：[`INDOOR_FULL_STACK_20260831.md`](INDOOR_FULL_STACK_20260831.md)  
-> **分析+计划**：[`INDOOR_E2I_PLAN_20260831.md`](INDOOR_E2I_PLAN_20260831.md) **v2**  
-> **致命缺陷**：[`INDOOR_FATAL_DEFECTS_20260831.md`](INDOOR_FATAL_DEFECTS_20260831.md)  
-> **视频抽检**：[`INDOOR_C1_ROUTE_VID_AUDIT_20260831.md`](INDOOR_C1_ROUTE_VID_AUDIT_20260831.md)  
-> **更新**：2026-08-31
+> **更新**：2026-09-01（**E2i.D 采集中**）  
+> **D 计划**：[`INDOOR_E2I_D_PLAN_20260901.md`](INDOOR_E2I_D_PLAN_20260901.md)
 
 ## 一句话
 
-E2h ❌。**C1 FT ✅；@0.50 eval ❌ 未过门**（1/3 seed 有到点；mean d_end **3.55 m**）。按计划 **停 / 评估室内 WM+π 适配**，禁 E3。
+**E2i.D 开刀**：D1 夹具绕障（gt_pd @0.25）+ D2 none 自采（d≤0.30）在 125 跑。主头 **B @0.50** 不变。**E3 仍禁**。
 
 ## 勾选
 
 | 项 | 状态 |
 |----|------|
-| E2h | ❌ 场景合格；合同/shield-off 见计划 §8 |
-| **E2i.0** 计划 v2 落盘 | ✅ |
-| **E2i.0w** yaml 罩 + 近成功接线 | ✅ |
-| **E2i.1** 室内罩 A/B | ✅ post-dtfix v3 interv **0.048**；d_end↓47.8% |
-| **E2i.1b** shield_v3 | ✅ |
-| **E2i.diag / dtfix** | ✅ |
-| **E2i.2a** B2 夹具 @0.20 | ✅ **34 arrived** |
-| **E2i.2b** B1 | ✅ **usable=62 ≥50** → `dataset_indoor_b99_none_near_20260831` |
-| **E2i.3** C1 短 FT + @0.50 eval | ✅ FT；❌ **eval gate FAIL** — seeds_with_arrival=**1**/3；mean_d=**3.55**；summary `artifacts/indoor_c1_eval_050_summary_c1_050_20260831.json` |
-| **E2i.4** C1/C2 H100 长 FT | ⛔ C1 不过门 → 不自动开 |
-| E3 | ⛔ 禁止 |
+| E2i.C 链 | S3✅ S1✅ S2❌ |
+| **E2i.D D1** 夹具绕障 | 🔄 `run_e2i_d_fixture_avoid_collect.sh` |
+| **E2i.D D2** none 近场 | ⏳ 接 D1 |
+| E2i.B @0.20 / S2 @0.20 | ❌ 对照 |
+| E3 | ⛔ |
 
-## E2h 结案数字（引用）
+## 对比
 
-| 评测 | 结果 |
-|------|------|
-| E2h.4 合同 @0.20 罩 ON | 0/3；best min≈1.78 m |
-| shield-off diag @0.20 | 0/3；best **0.63 m collided** |
-| 语料 | `dataset_indoor_building99_e2h_20260830` — **101 NPZ**（夹具 @0.50 为主） |
-
-## E2i v2 要点
-
-- **顺序**：E2i.1 过门前 **禁止 B1**；B2 可与 E2i.1 并行  
-- **B1 必须** `--annotation building99_indoor_short_routes.json`  
-- **B2 无** `max-intervention-rate`（夹具无罩）  
-- **FT** `--skip-collect` 不占 AirSim；eval/采集占  
-
-## 运维
-
-- 切换：`experiments/aerial/scripts/recover_renderer_scene.sh {blocks|building99|outdoor|stop}`
-- 室内 settings：`configs/airsim_settings_indoor.json` → `~/aerial_airsim_persistent/AirSim/settings_indoor.json`
-- 125 prompt：[`INDOOR_MAINLINE_125_PROMPT_20260831.md`](INDOOR_MAINLINE_125_PROMPT_20260831.md)
+| 评测 | seeds 有到点 | mean | 到点率 | 碰撞 / SPAWN |
+|------|-------------|------|--------|--------------|
+| **S3 B050**（8 路由） | 3/3 | 1.54 | 45.8% | 13/24 · SPAWN 4 |
+| **S1 B nospawn**（去 R01） | 3/3 | **1.28** | **57%** | 9/21 · SPAWN **5** |
+| S3 A050 | 3/3 | 1.91 | 37.5% | 15/24 · SPAWN 7 |
+| B @0.20 | 1/3 | 2.41 | 4% | 19/24 |

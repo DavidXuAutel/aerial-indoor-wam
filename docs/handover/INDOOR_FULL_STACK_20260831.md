@@ -454,17 +454,21 @@ $AERIAL_PY -m pytest experiments/aerial/rl/tests/test_three_zone_shield.py -q
 
 ---
 
-## 13. 下一步决策框架（必须人拍）
+## 13. 下一步决策框架
 
 C1 不过门 ⇒ **禁止**「再来 500 iter 碰运气」或直接 H100。按 F4 三选一：
 
 | 选项 | 做什么 | 过门仍用 |
 |------|--------|----------|
-| **A（优先写可行性）** | WM encode 室内短窗微调 + π 再 C1；记账分离 spawn vs 近障 | @0.50 罩 ON 同协议 |
-| **B** | spawn 健康过滤 + 加码 B1 后再短 FT | 同上 |
-| **C** | 全量室内 WM+π 适配日程（非补洞） | 另立里程碑 |
+| **A（已选 · 2026-08-31）** | WM encode 室内短窗微调 + π 再 C1；spawn 过滤记账 | @0.50 罩 ON 同协议 |
+| B | spawn 健康过滤 + 加码 B1 后再短 FT | 同上 |
+| C | 全量室内 WM+π 适配日程（非补洞） | 另立里程碑 |
 
-**无论选哪条**：完成态仍须罩 ON、`assist=none`、禁夹具刷分；`gt_proxy` 成绩不得写产品完成。
+**执行入口**：[`INDOOR_E2I_A_PLAN_20260831.md`](INDOOR_E2I_A_PLAN_20260831.md) · `experiments/aerial/scripts/run_e2i_a_pipeline.sh`  
+
+**E2i.A 结果（2026-08-31）**：@0.50 罩 ON **PASS** — seeds_with_arrival **3/3**（C1 曾 1/3）；mean d_end **1.53 m**（C1 曾 3.55；仍 >1.0）。头：`v4_ac_ckpt_indoor_e2i_a_20260831` + `wm_ckpt_indoor_encode_e2i_a_20260831/wm_step_400.pt`。  
+
+**人令全签 E2i.4（同日）**：见 [`INDOOR_E2I4_SIGN_20260831.md`](INDOOR_E2I4_SIGN_20260831.md) — @0.20 探针 + C2 mix/FT + 合同评；**E3 仍禁**。
 
 ---
 
@@ -477,6 +481,7 @@ C1 不过门 ⇒ **禁止**「再来 500 iter 碰运气」或直接 H100。按 F
 | `INDOOR_E2I_PLAN_20260831.md` | E2i 计划 v2 |
 | `INDOOR_E2I_DTFIX_PLAN_20260831.md` | dt 修复与 F0–F2 |
 | `INDOOR_FATAL_DEFECTS_20260831.md` | 致命缺陷 F1–F5 |
+| `INDOOR_E2I_A_PLAN_20260831.md` | **E2i.A** WM encode + π 再 C1 |
 | `INDOOR_C1_ROUTE_VID_AUDIT_20260831.md` | 视频抽检 |
 | `INDOOR_MAINLINE_125_PROMPT_20260831.md` | 125 Agent 提示 |
 | `RUNBOOK_indoor_0xm.md` §8.9 | 运行手册 |

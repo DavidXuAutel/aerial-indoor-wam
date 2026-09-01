@@ -1,0 +1,67 @@
+[
+  {
+    "trajectory_id": "avoid_diag_nw_north_corridor",
+    "source_route_idx": 5,
+    "avoid_tag": "lateral_detour",
+    "gpt_instruction": "Building_99 NW goal via north corridor (avoid cabinet frontal)",
+    "pos": [
+      [-0.5, 0.5, 1.5],
+      [-0.5, 2.4, 1.5],
+      [-2.4, 2.6, 1.5],
+      [-2.6, 2.6, 1.5]
+    ],
+    "yaw": [1.5708, 1.5708, 3.1416, 2.3562]
+  },
+  {
+    "trajectory_id": "avoid_diag_nw_wide",
+    "source_route_idx": 5,
+    "avoid_tag": "lateral_detour",
+    "gpt_instruction": "Building_99 NW goal wide north-then-west detour",
+    "pos": [
+      [-0.5, 0.5, 1.5],
+      [-0.2, 2.8, 1.5],
+      [-2.8, 2.8, 1.5],
+      [-2.6, 2.6, 1.5]
+    ],
+    "yaw": [1.5708, 1.5708, 3.1416, 2.3562]
+  },
+  {
+    "trajectory_id": "avoid_north_east_arc",
+    "source_route_idx": 1,
+    "avoid_tag": "lateral_detour",
+    "gpt_instruction": "Building_99 north via east lobby arc",
+    "pos": [
+      [0.0, 1.0, 1.5],
+      [1.2, 2.2, 1.5],
+      [0.6, 3.5, 1.5],
+      [0.0, 4.0, 1.5]
+    ],
+    "yaw": [0.7854, 1.5708, 1.5708, 1.5708]
+  },
+  {
+    "trajectory_id": "avoid_north_from1_east_arc",
+    "source_route_idx": 7,
+    "avoid_tag": "lateral_detour",
+    "gpt_instruction": "Building_99 north from y=1 via east arc",
+    "pos": [
+      [0.0, 1.0, 1.5],
+      [1.4, 1.8, 1.5],
+      [1.0, 3.2, 1.5],
+      [0.0, 4.0, 1.5]
+    ],
+    "yaw": [0.5236, 1.5708, 2.3562, 1.5708]
+  },
+  {
+    "trajectory_id": "avoid_diag_ne_lateral",
+    "source_route_idx": 4,
+    "avoid_tag": "lateral_detour",
+    "gpt_instruction": "Building_99 NE with slight east bias before diagonal",
+    "pos": [
+      [0.5, 0.5, 1.5],
+      [1.4, 0.5, 1.5],
+      [2.0, 1.6, 1.5],
+      [2.6, 2.6, 1.5]
+    ],
+    "yaw": [0.0, 0.7854, 0.7854, 0.7854]
+  }
+]

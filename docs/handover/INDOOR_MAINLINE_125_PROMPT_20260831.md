@@ -1,42 +1,42 @@
-# 125 Agent：E2i — 罩重标定 + 近成功语料 + 分阶 FT
+# Indoor E2i.A — 125 Agent 执行提示（2026-08-31）
 
 > **Workspace**：`/home/yao/aerial-indoor-wam`  
-> **权威**：[`INDOOR_E2I_PLAN_20260831.md`](INDOOR_E2I_PLAN_20260831.md) · `RUNBOOK_indoor_0xm.md` §8.9  
-> **前置**：E2h FAIL（101 NPZ + re-FT 仍 0/3 @0.20）；shield-off best 0.63 m  
+> **计划**：[`INDOOR_E2I_A_PLAN_20260831.md`](INDOOR_E2I_A_PLAN_20260831.md)  
+> **禁**：E3；shield-off 完成态；夹具刷分；碰运气再 500（须先 WM encode）
 
-## 铁律
+## 目标
 
-- 完成态：**罩 ON**、`assist=none`、forbid GT、pose 声明  
-- 夹具/GT-PD **仅 BC 辅轨**；禁当默认飞行核  
-- 禁 E3；禁关罩刷分；禁再堆 0.50 BC 冒充进展  
-- 室内占用 `:41451` 后须 `recover_renderer_scene.sh outdoor` 归还 Phase-2  
+跑通 **A**：成功加权 mix → WM encode 短窗 FT（warm-start `wm_step_3500`）→ π 再 C1 → @0.50 罩 ON eval。
 
-## 必做顺序
+## 同步（若 Mac 已推代码）
 
-### E2i.1 — 室内罩重标定
+确保以下文件在 125 上是最新：
 
-1. 分析 Building_99 intervention 逐步曲线 + depth 分布  
-2. 出一版 indoor `ThreeZoneSpec`（yaml/config 分支，须落盘参数）  
-3. 同 `e2h4` ckpt、同路由 A/B：旧罩 vs 新罩（**不重训**）  
-4. 过门：intervention_mean <0.5 且 mean d_end vs E2h.4 改善 >30%  
+- `experiments/aerial/rl/_wm_train_validate.py`（`--init-ckpt` / `--skip-gate`）
+- `experiments/aerial/scripts/indoor_build_e2i_a_mix.py`
+- `experiments/aerial/scripts/run_e2i_a_pipeline.sh`
+- `docs/handover/INDOOR_E2I_A_PLAN_20260831.md`
 
-### E2i.2 — 语料双轨
+## 一键（GPU 空闲时）
 
-- **B1**：`assist=none`，3 m，保留 d_end<1.0 m 近成功，≥50 usable  
-- **B2**：夹具 `gt_pd_body`，`success=0.20`，`max-intervention=0`，≥20 arrived  
-- 见计划文档 §5 E2i.2 命令模板  
+```bash
+cd /home/yao/aerial-indoor-wam
+source experiments/aerial/scripts/env_4090.sh
+# FT 不占 AirSim；eval 才需要 Building_99
+nohup bash experiments/aerial/scripts/run_e2i_a_pipeline.sh mix 2>&1 | tee logs/e2i_a_mix_20260831.log &
+# 然后：
+nohup bash experiments/aerial/scripts/run_e2i_a_pipeline.sh wm 2>&1 | tee -a logs/e2i_a_pipeline_20260831.log &
+# WM 完：
+nohup bash experiments/aerial/scripts/run_e2i_a_pipeline.sh pi 2>&1 | tee -a logs/e2i_a_pipeline_20260831.log &
+# π 完且 Building_99 就绪：
+bash experiments/aerial/scripts/check_airsim_indoor_ready.sh
+bash experiments/aerial/scripts/run_e2i_a_pipeline.sh eval
+```
 
-### E2i.3 — C1 @4090
+或：`bash experiments/aerial/scripts/run_e2i_a_pipeline.sh all`（eval 会占 AirSim）。
 
-- init=e2h4 或 outdoor；B1 主 + B2≤30%；`success_dist=0.50`；500 iter  
-- 评：Building_99 × 3 seed @0.50  
-- 过门：≥2/3 seed 到点或 mean≤1.0 m  
+## 过门
 
-### E2i.4 — H100 长 FT（C1/C2）
-
-- C1：2000+ iter；C2：1000+ iter，主料 B2@0.20  
-- 合同：≥2/3 seed @0.20 或 mean≤0.8 m  
-
-## 汇报
-
-更新 `INDOOR_0XM_STATUS.md` + `LIVING_DOCS.md` A0；`/tmp/indoor_mainline_125_report.md`。
+同 C1：`seeds_with_arrival ≥ 2/3` **或** `mean_d_end ≤ 1.0`。  
+Summary：`artifacts/indoor_e2i_a_eval_050_summary_a_20260831.json`  
+不过门 → **停**，不自动 H100。

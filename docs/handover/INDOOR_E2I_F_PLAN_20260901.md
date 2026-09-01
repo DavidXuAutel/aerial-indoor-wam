@@ -101,4 +101,5 @@ bash experiments/aerial/scripts/run_e2i_f_primary_050_nospawn_eval.sh
 |----|------|
 | 主验收 `0.50` + nospawn | **采纳**（本文） |
 | `0.20` 降 stretch | **采纳** |
-| 下一执行 = F1 基线评 | **待跑**（禁 FT） |
+| F1 基线评 | ✅ 已跑 · **FAIL G2**（mean 1.22；arr 61%；视频：北向脏） |
+| **F1b** 去 `north_3m`+`north_from_y1` | **现行下一刀** → [`INDOOR_E2I_F1B_PLAN_20260901.md`](INDOOR_E2I_F1B_PLAN_20260901.md) |

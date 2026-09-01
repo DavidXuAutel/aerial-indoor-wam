@@ -104,15 +104,27 @@ esac
 export VK_ICD_FILENAMES="${VK_ICD_FILENAMES:-/usr/share/vulkan/icd.d/nvidia_icd.json}"
 nvidia-smi --query-gpu=name,driver_version --format=csv,noheader || true
 
+# ON_SCREEN=1 → show UE window on local GNOME (:1). Default remains offscreen for headless agents.
+ON_SCREEN="${ON_SCREEN:-0}"
+EXTRA_FLAGS=(-Vulkan -windowed -ResX=1920 -ResY=1080 -nosound)
+if [[ "$ON_SCREEN" == "1" ]]; then
+  export DISPLAY="${DISPLAY:-:1}"
+  if [[ -z "${XAUTHORITY:-}" ]]; then
+    if [[ -f /run/user/1000/gdm/Xauthority ]]; then
+      export XAUTHORITY=/run/user/1000/gdm/Xauthority
+    elif [[ -f "$HOME/.Xauthority" ]]; then
+      export XAUTHORITY="$HOME/.Xauthority"
+    fi
+  fi
+  echo "ON_SCREEN=1 DISPLAY=$DISPLAY XAUTHORITY=${XAUTHORITY:-none}"
+else
+  EXTRA_FLAGS+=(-RenderOffScreen)
+fi
+
 stop_renderer
 cd "$SCENE"
-nohup setsid "$LAUNCH" \
-  -Vulkan \
-  -RenderOffScreen \
-  -windowed \
-  -ResX=1920 \
-  -ResY=1080 \
-  -nosound >"$LOG" 2>&1 </dev/null &
+nohup setsid env DISPLAY="${DISPLAY:-}" XAUTHORITY="${XAUTHORITY:-}" "$LAUNCH" \
+  "${EXTRA_FLAGS[@]}" >"$LOG" 2>&1 </dev/null &
 pid=$!
 echo "$pid" >"$PIDFILE"
 

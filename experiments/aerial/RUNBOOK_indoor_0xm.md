@@ -271,8 +271,20 @@ bash experiments/aerial/scripts/recover_renderer_scene.sh outdoor
 | **E2i.2a** | B2 夹具 @0.20≥20（可与 E2i.1 并行） | arrived≥20 |
 | **E2i.2b** | B1 `assist=none` 近成功≥50（**E2i.1 过门后**） | usable≥50；禁室外 annotation |
 | **E2i.3** | C1 短 FT @4090（FT **不占** AirSim） | ≥2/3 seed @0.50 或 mean≤1.0 m |
-| **E2i.4** | C1/C2 H100 长 FT（≥2000/≥1000 iter） | 合同 @0.20：≥2/3 seed 或 mean≤0.8 m |
+| **E2i.4** | C1/C2 H100 长 FT（≥2000/≥1000 iter） | 历史冲 @0.20；**主门已由 E2i.F 改钉** |
 | **停** | E2i.1 不过 → 禁 B1；C1 不过 → 停；C2 不过 → WM encode 评估；禁 E3 | — |
+
+### 8.10 阶段 E2i.F — 合同重钉（2026-09-01 · **现行**）
+
+> **权威**：[`INDOOR_E2I_F_PLAN_20260901.md`](../../docs/handover/INDOOR_E2I_F_PLAN_20260901.md)
+
+| 项 | 冻结 |
+|----|------|
+| **主验收** | `success_dist=0.50` + **nospawn**（无 R01/R06）+ `assist=none` + 罩 ON |
+| **stretch** | `@0.20` 同集旁注；**禁止**单独写完成态 |
+| **位姿** | `gt_proxy` = 探针；≠ 传感合同 |
+| **下一刀** | **F1** 基线评（禁 FT）：`bash experiments/aerial/scripts/run_e2i_f_primary_050_nospawn_eval.sh` |
+| **禁** | 盲再 FT；用 full8 SPAWN 淹没主报；E3 无人令 |
 
 **完整分析+命令**：[`docs/handover/INDOOR_E2I_PLAN_20260831.md`](../../docs/handover/INDOOR_E2I_PLAN_20260831.md)  
 **125 prompt**：[`docs/handover/INDOOR_MAINLINE_125_PROMPT_20260831.md`](../../docs/handover/INDOOR_MAINLINE_125_PROMPT_20260831.md)
@@ -295,5 +307,6 @@ bash experiments/aerial/scripts/recover_renderer_scene.sh outdoor
 | 2026-08-30 | **场景审计 FAIL**：E2 系数据全是室外 `env_airsim_16` 短段（多垂直爬升）；人令首选推进 → **E2h 室内场景**；**E2g 停** |
 | 2026-08-31 | **E2h.3 FAIL**：Building_99 FT + `assist=none` @0.20 → 0/3 seed；罩介入≈1.0；场景合格但 π 未进圈；禁 E3 |
 | 2026-08-31 | **E2h.4 FAIL** + shield-off diag；开 **E2i**（罩重标定+近成功语料+分阶 FT）；见 `INDOOR_E2I_PLAN_20260831.md` |
+| 2026-09-01 | **E2i.F**：主验收改钉 **@0.50 nospawn**；@0.20=stretch；下一刀 **F1**（禁 FT）；见 `INDOOR_E2I_F_PLAN_20260901.md` |
 | 2026-08-31 | **E2i plan v2**：修正 B1/B2 命令、A→B1 顺序、collision 过门、yaml 接线、AirSim 表 |
 | 2026-08-31 | **致命缺陷文档**：`INDOOR_FATAL_DEFECTS_20260831.md`（F1–F5）；挂 LIVING/STATUS/§4 |

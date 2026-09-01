@@ -1,0 +1,505 @@
+{
+  "protocol": "building99_route_clearance_audit",
+  "source": "/home/yao/aerial-indoor-wam/artifacts/building99_indoor_short_routes.json",
+  "min_start_clearance_m": 1.0,
+  "min_goal_clearance_m": 1.0,
+  "n_in": 8,
+  "n_keep": 3,
+  "kept_ids": [
+    "B99_lobby_west_3m",
+    "B99_lobby_south_3m",
+    "B99_lobby_east_from_1"
+  ],
+  "dropped": [
+    {
+      "idx": 0,
+      "trajectory_id": "B99_lobby_east_3m",
+      "start": [
+        0.0,
+        0.0,
+        1.5
+      ],
+      "goal": [
+        3.0,
+        0.0,
+        1.5
+      ],
+      "yaw0": 0.0,
+      "start_audit": {
+        "depth_min_m": 0.706,
+        "collided": true,
+        "nudge_collided": true
+      },
+      "goal_audit": {
+        "depth_min_m": 1.524,
+        "depth_by_yaw": [
+          2.316,
+          2.258,
+          2.191,
+          2.248,
+          2.25,
+          1.524,
+          1.902,
+          1.867
+        ],
+        "collided": false
+      },
+      "keep": false,
+      "drop_reasons": [
+        "start_collide_nudge"
+      ]
+    },
+    {
+      "idx": 1,
+      "trajectory_id": "B99_lobby_north_3m",
+      "start": [
+        0.0,
+        1.0,
+        1.5
+      ],
+      "goal": [
+        0.0,
+        4.0,
+        1.5
+      ],
+      "yaw0": 1.5708,
+      "start_audit": {
+        "depth_min_m": 1.189,
+        "collided": false,
+        "nudge_collided": false
+      },
+      "goal_audit": {
+        "depth_min_m": 0.124,
+        "depth_by_yaw": [
+          0.149,
+          0.148,
+          0.152,
+          0.152,
+          0.152,
+          0.152,
+          0.124,
+          0.124
+        ],
+        "collided": true
+      },
+      "keep": false,
+      "drop_reasons": [
+        "goal_collide"
+      ]
+    },
+    {
+      "idx": 4,
+      "trajectory_id": "B99_lobby_diag_ne_3m",
+      "start": [
+        0.5,
+        0.5,
+        1.5
+      ],
+      "goal": [
+        2.6,
+        2.6,
+        1.5
+      ],
+      "yaw0": 0.7854,
+      "start_audit": {
+        "depth_min_m": 1.263,
+        "collided": false,
+        "nudge_collided": false
+      },
+      "goal_audit": {
+        "depth_min_m": 0.83,
+        "depth_by_yaw": [
+          2.264,
+          2.279,
+          1.398,
+          0.83,
+          1.076,
+          2.252,
+          2.252,
+          2.254
+        ],
+        "collided": false
+      },
+      "keep": false,
+      "drop_reasons": [
+        "goal_clearance<1.0"
+      ]
+    },
+    {
+      "idx": 5,
+      "trajectory_id": "B99_lobby_diag_nw_3m",
+      "start": [
+        -0.5,
+        0.5,
+        1.5
+      ],
+      "goal": [
+        -2.6,
+        2.6,
+        1.5
+      ],
+      "yaw0": 2.3562,
+      "start_audit": {
+        "depth_min_m": 1.263,
+        "collided": false,
+        "nudge_collided": false
+      },
+      "goal_audit": {
+        "depth_min_m": 0.173,
+        "depth_by_yaw": [
+          0.177,
+          0.182,
+          0.181,
+          0.182,
+          0.173,
+          0.774,
+          2.25,
+          2.252
+        ],
+        "collided": false
+      },
+      "keep": false,
+      "drop_reasons": [
+        "goal_clearance<1.0"
+      ]
+    },
+    {
+      "idx": 7,
+      "trajectory_id": "B99_lobby_north_from_y1",
+      "start": [
+        0.0,
+        1.0,
+        1.5
+      ],
+      "goal": [
+        0.0,
+        4.0,
+        1.5
+      ],
+      "yaw0": 1.5708,
+      "start_audit": {
+        "depth_min_m": 1.189,
+        "collided": false,
+        "nudge_collided": false
+      },
+      "goal_audit": {
+        "depth_min_m": 0.124,
+        "depth_by_yaw": [
+          0.149,
+          0.148,
+          0.152,
+          0.152,
+          0.152,
+          0.152,
+          0.124,
+          0.124
+        ],
+        "collided": true
+      },
+      "keep": false,
+      "drop_reasons": [
+        "goal_collide"
+      ]
+    }
+  ],
+  "rows": [
+    {
+      "idx": 0,
+      "trajectory_id": "B99_lobby_east_3m",
+      "start": [
+        0.0,
+        0.0,
+        1.5
+      ],
+      "goal": [
+        3.0,
+        0.0,
+        1.5
+      ],
+      "yaw0": 0.0,
+      "start_audit": {
+        "depth_min_m": 0.706,
+        "collided": true,
+        "nudge_collided": true
+      },
+      "goal_audit": {
+        "depth_min_m": 1.524,
+        "depth_by_yaw": [
+          2.316,
+          2.258,
+          2.191,
+          2.248,
+          2.25,
+          1.524,
+          1.902,
+          1.867
+        ],
+        "collided": false
+      },
+      "keep": false,
+      "drop_reasons": [
+        "start_collide_nudge"
+      ]
+    },
+    {
+      "idx": 1,
+      "trajectory_id": "B99_lobby_north_3m",
+      "start": [
+        0.0,
+        1.0,
+        1.5
+      ],
+      "goal": [
+        0.0,
+        4.0,
+        1.5
+      ],
+      "yaw0": 1.5708,
+      "start_audit": {
+        "depth_min_m": 1.189,
+        "collided": false,
+        "nudge_collided": false
+      },
+      "goal_audit": {
+        "depth_min_m": 0.124,
+        "depth_by_yaw": [
+          0.149,
+          0.148,
+          0.152,
+          0.152,
+          0.152,
+          0.152,
+          0.124,
+          0.124
+        ],
+        "collided": true
+      },
+      "keep": false,
+      "drop_reasons": [
+        "goal_collide"
+      ]
+    },
+    {
+      "idx": 2,
+      "trajectory_id": "B99_lobby_west_3m",
+      "start": [
+        1.0,
+        0.0,
+        1.5
+      ],
+      "goal": [
+        -2.0,
+        0.0,
+        1.5
+      ],
+      "yaw0": 3.1416,
+      "start_audit": {
+        "depth_min_m": 2.254,
+        "collided": false,
+        "nudge_collided": false
+      },
+      "goal_audit": {
+        "depth_min_m": 1.141,
+        "depth_by_yaw": [
+          2.211,
+          1.616,
+          1.562,
+          1.141,
+          1.955,
+          1.921,
+          2.252,
+          1.648
+        ],
+        "collided": false
+      },
+      "keep": true,
+      "drop_reasons": []
+    },
+    {
+      "idx": 3,
+      "trajectory_id": "B99_lobby_south_3m",
+      "start": [
+        0.0,
+        -1.0,
+        1.5
+      ],
+      "goal": [
+        0.0,
+        -4.0,
+        1.5
+      ],
+      "yaw0": -1.5708,
+      "start_audit": {
+        "depth_min_m": 2.254,
+        "collided": false,
+        "nudge_collided": false
+      },
+      "goal_audit": {
+        "depth_min_m": 1.203,
+        "depth_by_yaw": [
+          1.675,
+          2.219,
+          2.24,
+          2.16,
+          1.258,
+          1.241,
+          1.203,
+          1.203
+        ],
+        "collided": false
+      },
+      "keep": true,
+      "drop_reasons": []
+    },
+    {
+      "idx": 4,
+      "trajectory_id": "B99_lobby_diag_ne_3m",
+      "start": [
+        0.5,
+        0.5,
+        1.5
+      ],
+      "goal": [
+        2.6,
+        2.6,
+        1.5
+      ],
+      "yaw0": 0.7854,
+      "start_audit": {
+        "depth_min_m": 1.263,
+        "collided": false,
+        "nudge_collided": false
+      },
+      "goal_audit": {
+        "depth_min_m": 0.83,
+        "depth_by_yaw": [
+          2.264,
+          2.279,
+          1.398,
+          0.83,
+          1.076,
+          2.252,
+          2.252,
+          2.254
+        ],
+        "collided": false
+      },
+      "keep": false,
+      "drop_reasons": [
+        "goal_clearance<1.0"
+      ]
+    },
+    {
+      "idx": 5,
+      "trajectory_id": "B99_lobby_diag_nw_3m",
+      "start": [
+        -0.5,
+        0.5,
+        1.5
+      ],
+      "goal": [
+        -2.6,
+        2.6,
+        1.5
+      ],
+      "yaw0": 2.3562,
+      "start_audit": {
+        "depth_min_m": 1.263,
+        "collided": false,
+        "nudge_collided": false
+      },
+      "goal_audit": {
+        "depth_min_m": 0.173,
+        "depth_by_yaw": [
+          0.177,
+          0.182,
+          0.181,
+          0.182,
+          0.173,
+          0.774,
+          2.25,
+          2.252
+        ],
+        "collided": false
+      },
+      "keep": false,
+      "drop_reasons": [
+        "goal_clearance<1.0"
+      ]
+    },
+    {
+      "idx": 6,
+      "trajectory_id": "B99_lobby_east_from_1",
+      "start": [
+        1.0,
+        0.0,
+        1.5
+      ],
+      "goal": [
+        4.0,
+        0.0,
+        1.5
+      ],
+      "yaw0": 0.0,
+      "start_audit": {
+        "depth_min_m": 2.252,
+        "collided": false,
+        "nudge_collided": false
+      },
+      "goal_audit": {
+        "depth_min_m": 1.171,
+        "depth_by_yaw": [
+          2.309,
+          1.917,
+          1.549,
+          1.171,
+          2.248,
+          2.25,
+          2.254,
+          1.944
+        ],
+        "collided": false
+      },
+      "keep": true,
+      "drop_reasons": []
+    },
+    {
+      "idx": 7,
+      "trajectory_id": "B99_lobby_north_from_y1",
+      "start": [
+        0.0,
+        1.0,
+        1.5
+      ],
+      "goal": [
+        0.0,
+        4.0,
+        1.5
+      ],
+      "yaw0": 1.5708,
+      "start_audit": {
+        "depth_min_m": 1.189,
+        "collided": false,
+        "nudge_collided": false
+      },
+      "goal_audit": {
+        "depth_min_m": 0.124,
+        "depth_by_yaw": [
+          0.149,
+          0.148,
+          0.152,
+          0.152,
+          0.152,
+          0.152,
+          0.124,
+          0.124
+        ],
+        "collided": true
+      },
+      "keep": false,
+      "drop_reasons": [
+        "goal_collide"
+      ]
+    }
+  ]
+}

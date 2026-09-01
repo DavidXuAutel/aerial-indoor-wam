@@ -1,0 +1,9 @@
+{
+  "protocol": "building99_clean_start_goal",
+  "source": "/home/yao/aerial-indoor-wam/artifacts/building99_indoor_short_routes.json",
+  "min_start_clearance_m": 1.0,
+  "min_goal_clearance_m": 1.0,
+  "n_in": 8,
+  "n_out": 3,
+  "report": "/home/yao/aerial-indoor-wam/artifacts/building99_route_clearance_audit_20260901.json"
+}

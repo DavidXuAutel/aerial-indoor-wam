@@ -9,14 +9,14 @@
 | 序# | ID | 缺口 | 09-02 | 产品结案 | 下一刀归属 |
 |-----|-----|------|-------|----------|------------|
 | 1 | F5 | 指标污染 | 纪律+F-cap | ⚠️ 流程 | Mac 文档 |
-| 2 | F10 | SPAWN/可复现 | hygiene | ❌ | 125 探针 |
+| 2 | F10 | SPAWN/可复现 | ✅ 探针 | ❌ | hygiene 结论已落盘 |
 | 3 | F2 | gt_proxy | E3 开 | ❌ | 125 odom formal |
 | 4 | F8 | E3 formal | deferred | ❌ | 125（sim 可飞） |
 | 5 | F9 | E3 ckpt×velfix | 未重评 | ❌ | 125 → 人令 H100 |
-| 6 | F6 | 单路由 | east only | ❌ | 125 F3 south |
-| 7 | F1 | 夹具训/none验 | 部分 | ❌ | 125 语料审计 |
-| 8 | F3 | π 无罩近场 | 罩已修 | ❌ | 125 归档 diag |
-| 9 | F7 | @0.20 产品精度 | stretch | ❌ | 125 F-stretch |
+| 6 | F6 | 单路由 | east only | ❌ | **south 3/3 SPAWN** |
+| 7 | F1 | 夹具训/none验 | ⚠️ 审计 | ❌ | fixture_frac=0.25 |
+| 8 | F3 | π 无罩近场 | 罩已修 | ❌ | 归档 shield-off |
+| 9 | F7 | @0.20 产品精度 | ✅ stretch 44% | ❌ | 旁注已报 |
 | 10 | F4 | 域适配 | 未结案 | ❌ | **人令** H100 F4 |
 | 11 | F11 | 动态/部署 | 未测 | ❌ | 部署轨（另立） |
 | 12 | F12 | WAM AC 室内 | 未证 | ❌ | V4 轨（另立） |
@@ -187,10 +187,12 @@ bash experiments/aerial/scripts/run_e2i_f2_cap_050_eval.sh  # 对照：罩 ON �
 **继续**（125 · stretch 旁注）：
 
 ```bash
-SUCCESS_DIST=0.20 GATE_MODE=legacy TAG=f_stretch_020_nospawn \
-  bash experiments/aerial/scripts/run_e2i_f_eval_050.sh
-# 集：nospawn 6 路由（见 F PLAN §1.2）
+STAMP=20260902 SUCCESS_DIST=0.20 \
+  ACT=experiments/aerial/rl/artifacts/v4_ac_ckpt_indoor_e2i_e_20260901/v4_ac_latest.pt \
+  bash experiments/aerial/scripts/run_e2i_f_primary_050_nospawn_eval.sh
 ```
+
+**2026-09-02 结果**：`artifacts/indoor_e2i_f_020_nospawn_summary_20260902.json` — **arr 44% (8/18)** · mean_d≈**1.24** · spawn=2 · **primary_gate_pass=false**（标签 **`stretch`**，非产品门）。
 
 **过门**：**无产品门**；数字标签 **`stretch`**；禁止 stretch PASS ⇒ 产品完成。
 
@@ -237,13 +239,13 @@ bash experiments/aerial/scripts/run_e2i_a_pipeline.sh   # 或 F4 新日程
 
 ```text
 序1 F5   Mac 已文档化
-序2 F10  run_e2i_f_hygiene_west_probe.sh → south_spawn_probe
+序2 F10  ✅ west/south 探针
+序6 F6   ✅ south cap FAIL（全 SPAWN）
+序7 F1   ✅ 语料审计（fixture 25% · collect none）
+序9 F7   ✅ stretch @0.20 arr 44%
 序4 F8   sim 可飞 → run_e2i_e3_east_velfix_eval.sh
 序5 F9   读 summary → 人令 E3.2′
-序6 F6   F3 south cap（可选）
-序7 F1   语料审计
 序8 F3   归档 shield-off（不新跑）
-序9 F7   stretch（旁注）
 序10 F4  等人令
 序11–12 另立轨
 ```

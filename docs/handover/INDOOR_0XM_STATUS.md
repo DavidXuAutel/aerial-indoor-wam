@@ -25,7 +25,7 @@
 | spawn watch | ⏸ 可选后台（125）；**不阻塞 close**；绿了可补 summary |
 | **缺口续作序 6 F6** | ❌ F3 south cap **FAIL** — 3/3 SPAWN · spawn_rate=1.0 · **0 scored** |
 | **缺口续作序 7 F1** | ⚠️ 审计：E mix **fixture_frac=0.25**；F-collect 39ep **assist=none** |
-| **缺口续作序 9 F7** | ⏳ stretch @0.20 nospawn（125 跑数中） |
+| **缺口续作序 9 F7** | ✅ stretch @0.20 nospawn — **arr 44%** · mean_d≈1.24 · **stretch 旁注** |
 
 ## 收口（2026-09-02）
 

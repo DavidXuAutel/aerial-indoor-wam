@@ -3,8 +3,12 @@
 Design boundary (spec §1.2 — external perception is RGB-ONLY):
 
   POLICY / WORLD-MODEL INPUTS
-    * ``rgb``      monocular ego RGB (224x224), the only exteroceptive input
+    * ``rgb``      WAM branch (224×224), derived from the single camera grab
     * ``proprio4`` (x, y, z, yaw) — matches the FastWAM ``state`` dim = 4
+
+  SAME-GRAB FAN-OUT (not extra cameras; not fed to the policy)
+    * ``rgb_vio``  native capture for VIO / OpenVINS
+    * ``rgb_yolo`` YOLO side-branch (native or detector size)
 
   SUPERVISION / REWARD-ONLY (NOT fed to the policy)
     * ``depth``    dense metric depth GT — target for the [1b] depth head + a
@@ -41,7 +45,7 @@ class Observation:
     FastWAM policy/world-model actually consume.
     """
 
-    rgb: np.ndarray                      # [H, W, 3] uint8 — policy input
+    rgb: np.ndarray                      # [H, W, 3] uint8 — WAM / policy input
     state: np.ndarray                    # [7] float32 x,y,z,vx,vy,vz,yaw
     collided: bool = False               # supervision / termination only
     depth: Optional[np.ndarray] = None   # [H, W] float32 — supervision only
@@ -52,6 +56,9 @@ class Observation:
     baro_alt: Optional[float] = None     # barometer / altimeter reading (m)
     rel_odom: Optional[np.ndarray] = None # relative odometry delta [dx, dy, dz, dyaw] from episode start or step t-1
     agl_m: Optional[float] = None        # above-ground-level distance (m) from altimeter/downward ToF
+    # Same single-camera grab, fan-out (optional; None on legacy corpora)
+    rgb_vio: Optional[np.ndarray] = None   # native capture → VIO
+    rgb_yolo: Optional[np.ndarray] = None  # → YOLO side branch
 
     def __post_init__(self) -> None:
         self.rgb = np.ascontiguousarray(np.asarray(self.rgb, dtype=np.uint8))
@@ -62,6 +69,10 @@ class Observation:
             )
         if self.depth is not None:
             self.depth = np.asarray(self.depth, dtype=np.float32)
+        if self.rgb_vio is not None:
+            self.rgb_vio = np.ascontiguousarray(np.asarray(self.rgb_vio, dtype=np.uint8))
+        if self.rgb_yolo is not None:
+            self.rgb_yolo = np.ascontiguousarray(np.asarray(self.rgb_yolo, dtype=np.uint8))
 
     @property
     def position(self) -> np.ndarray:

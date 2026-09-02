@@ -51,16 +51,22 @@ class AirSimEnvConfig:
     port: int = 41451
     camera: str = "front_custom"
     vehicle: str = "drone_1"
+    # CaptureSettings WH (single camera). Indoor sensing default via env /
+    # ``indoor_capture`` is 640×480; outdoor/WAM-legacy often 224.
     width: int = 224
     height: int = 224
+    # After one Scene grab, fan-out → WAM 224 + VIO native + YOLO branch
+    # (``indoor_capture.fanout_rgb``). Not a second AirSim camera.
+    fanout_rgb: bool = True
+    wam_encode_size: int = 224
     step_hz: float = 30.0
     takeoff_z: float = -3.0            # NED start altitude (climb 3 m)
     health_check: bool = True          # sanity-gate IMU + depth on reset
     warmup_frames: int = 1
-    # Per-step DepthPlanar grab. Cross-net DepthPlanar@224 is ~250 ms (vs Scene
-    # JPEG ~30 ms), so enabling it drops the closed loop from ~14 Hz to ~3 Hz on
-    # the H100→4090 path. Health-check on reset still grabs depth once when
-    # health_check=True. Set False for Plan-A rate smokes / RGB-first collection.
+    # Per-step DepthPlanar grab. Cross-net DepthPlanar@640 is slower than Scene
+    # JPEG; enabling it drops the closed loop on the H100→4090 path. Health-check
+    # on reset still grabs depth once when health_check=True. Set False for
+    # Plan-A rate smokes / RGB-first collection.
     grab_depth: bool = True
     # Teleport spawn hygiene (Building_99: gravity drop after pose set → floor SPAWN).
     spawn_retry_max: int = 6
@@ -85,8 +91,10 @@ class AirSimEnvConfig:
             port=int(os.environ.get("AIRSIM_PORT", cls.port)),
             camera=os.environ.get("AIRSIM_CAMERA", cls.camera),
             vehicle=os.environ.get("AIRSIM_VEHICLE", cls.vehicle),
-            width=int(os.environ.get("L2F_W", cls.width)),
-            height=int(os.environ.get("L2F_H", cls.height)),
+            width=int(os.environ.get("L2F_W", os.environ.get("INDOOR_CAPTURE_W", cls.width))),
+            height=int(os.environ.get("L2F_H", os.environ.get("INDOOR_CAPTURE_H", cls.height))),
+            fanout_rgb=os.environ.get("AIRSIM_FANOUT_RGB", "1") not in ("0", "false", "False"),
+            wam_encode_size=int(os.environ.get("WAM_ENCODE_SIZE", cls.wam_encode_size)),
             step_hz=float(os.environ.get("RL_STEP_HZ", cls.step_hz)),
         )
         if overrides:
@@ -245,7 +253,16 @@ class AirSimDroneEnv:
 
     def observe(self, *, force_depth: bool = False) -> Observation:
         client = self._connect()
-        rgb = self._grab_scene(client)
+        capture = self._grab_scene(client)
+        rgb = capture
+        rgb_vio = None
+        rgb_yolo = None
+        if self.config.fanout_rgb:
+            from experiments.aerial.rl.indoor_capture import fanout_rgb
+
+            rgb, rgb_vio, rgb_yolo = fanout_rgb(
+                capture, wam_size=int(self.config.wam_encode_size)
+            )
         # Depth is optional per-step (see ``grab_depth``); force it for the
         # one-shot health check on reset even when per-step grabs are off.
         want_depth = force_depth or self.config.grab_depth
@@ -263,6 +280,8 @@ class AirSimDroneEnv:
             baro_alt=baro_alt,
             t=time.perf_counter() - self._t0,
             info={"goal": None if self._goal is None else self._goal.tolist()},
+            rgb_vio=rgb_vio,
+            rgb_yolo=rgb_yolo,
         )
 
     def _spawn_xy_offsets(self) -> list[tuple[float, float]]:
@@ -355,8 +374,13 @@ class AirSimDroneEnv:
         if img is None:
             raise RuntimeError("empty/undecodable Scene buffer")
         rgb = img[..., ::-1]  # BGR -> RGB
-        if (img.shape[1], img.shape[0]) != (self.config.width, self.config.height):
-            rgb = cv2.resize(rgb, (self.config.width, self.config.height), interpolation=cv2.INTER_LINEAR)
+        # With fan-out, keep native CaptureSettings pixels for VIO/YOLO; WAM
+        # resize happens in ``fanout_rgb``. Without fan-out, match config WH.
+        if not self.config.fanout_rgb:
+            if (img.shape[1], img.shape[0]) != (self.config.width, self.config.height):
+                rgb = cv2.resize(
+                    rgb, (self.config.width, self.config.height), interpolation=cv2.INTER_LINEAR
+                )
         return np.ascontiguousarray(rgb, dtype=np.uint8)
 
     def _grab_depth(self, client: Any) -> Optional[np.ndarray]:

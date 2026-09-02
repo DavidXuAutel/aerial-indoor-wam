@@ -110,6 +110,7 @@ class RolloutCollector:
         planner: Optional[Any] = None,
         dynamics: Optional[Any] = None,
         takeoff_scan_steps: int = 0,
+        terminal_dock: bool = True,
     ) -> None:
         self.env = env
         self.policy = policy
@@ -119,6 +120,9 @@ class RolloutCollector:
         self.max_steps = int(max_steps)
         self.target_hz = float(target_hz)
         self.takeoff_scan_steps = int(max(0, takeoff_scan_steps))
+        # When False, never bypass the policy with GT ann-goal docking
+        # (needed for visual-goal / vgoal eval). Default True preserves F-cap.
+        self.terminal_dock = bool(terminal_dock)
         # Drop episodes whose reset spawns the vehicle already in collision
         # (inside geometry): no action has been taken, so it's a spawn artifact,
         # not a learnable trajectory. Skipped before any step / buffer write.
@@ -238,7 +242,12 @@ class RolloutCollector:
                 cones_raw = obs.info.get("depth_cones_pred") if isinstance(obs.info, dict) else None
                 d_fwd = float(cones_raw.get("forward", 5.0)) if isinstance(cones_raw, dict) and cones_raw.get("forward") is not None else 5.0
 
-                if goal_xyz is not None and 0.01 < d_curr_goal <= 35.0 and d_fwd >= 1.5:
+                if (
+                    self.terminal_dock
+                    and goal_xyz is not None
+                    and 0.01 < d_curr_goal <= 35.0
+                    and d_fwd >= 1.5
+                ):
                     # Spec 20260828 §5.2: Terminal 3D precision docking within 35.0m when forward path is clear
                     gr = goal_rel_body(obs.position, obs.yaw, goal_xyz)
                     body_v = body_vel_from_obs(obs)

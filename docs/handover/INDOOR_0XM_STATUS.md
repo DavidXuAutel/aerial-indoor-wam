@@ -23,7 +23,7 @@
 | **E3 velfix + E3.5 审计** | ✅ east drift 0.93→0.11 m · **2/3 arr_hat** |
 | **E3 formal odom east** | ⏸ **deferred** — sim east SPAWN（gt_proxy 探针亦首步撞）；**非门** |
 | spawn watch | ⏸ 可选后台（125）；**不阻塞 close**；绿了可补 summary |
-| **缺口续作序 2 F10** | ⏳ west/south hygiene 探针（125 · 不过门） |
+| **缺口续作序 2 F10** | ✅ west/south 探针已跑 · 工件 `artifacts/indoor_*_probe_20260902.json` |
 
 ## 收口（2026-09-02）
 
@@ -42,6 +42,6 @@
 ## Hygiene backlog（不过门）
 
 - east：~11:05 起 intermittent SPAWN（gt/odom 同现）· watch 可选  
-- west：静态贴地 ~10–20% · 探针 `indoor_west_collision_probe`  
-- south：F1c 绿 → F1d 全 SPAWN（待查）  
+- west：**F10 探针 20260902** — physics sweep 0/12 撞；**policy step 0 → `floorAtri_2`**（z≈−0.53，贴地/高度）  
+- south：**F10 探针 20260902** — route 1 **SPAWN** steps=1 collided（与 F1d 一致）  
 - 动态人动线：部署 hold/换点；不进 F-cap

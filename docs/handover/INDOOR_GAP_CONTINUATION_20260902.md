@@ -11,7 +11,7 @@
 | 1 | F5 | 指标污染 | 纪律+F-cap | ⚠️ 流程 | Mac 文档 |
 | 2 | F10 | SPAWN/可复现 | ✅ 探针 | ❌ | hygiene 结论已落盘 |
 | 3 | F2 | gt_proxy | E3 开 | ❌ | 125 odom formal |
-| 4 | F8 | E3 formal | deferred | ❌ | 125（sim 可飞） |
+| 4 | F8 | E3 formal | ❌ G1 1/3 hat | ❌ | 人令 E3.2′ 或停 |
 | 5 | F9 | E3 ckpt×velfix | 未重评 | ❌ | 125 → 人令 H100 |
 | 6 | F6 | 单路由 | east only | ❌ | **south 3/3 SPAWN** |
 | 7 | F1 | 夹具训/none验 | ⚠️ 审计 | ❌ | fixture_frac=0.25 |
@@ -82,19 +82,24 @@ bash experiments/aerial/scripts/run_e2i_f_hygiene_south_spawn_probe.sh
 
 **缺口**：E3.3 post-FT **0/6 arrived_hat**；velfix 审计 2/3（非 formal）。
 
-**继续**（125 · sim 可飞时）：
-
 ```bash
-bash experiments/aerial/scripts/run_e2i_e3_east_velfix_eval.sh
-# 或 watch 绿后自动 summary
+STAMP=20260902_z18 bash experiments/aerial/scripts/run_e2i_e3_east_velfix_eval.sh
 ```
 
-**工件**：`artifacts/indoor_e2i_e3_odom_east_sg_velfix_050_summary_*`
+**2026-09-02_z18 结果**（E 头 · odom · z_floor=1.8 · spawn hold）：
 
-**过门**：F-cap 同 G1–G4，但 `pose_source=odom_from_imu_rgb`、判据用 **`arrived_hat`**。
+| 指标 | 值 |
+|------|-----|
+| spawn_rate | **0** |
+| arrived_gt | **3/3** |
+| arrived_hat (G1) | **1/3** ❌ |
+| d_end gt / hat | ≈0.40–0.46 / 0.46–0.72 |
+| G2/G3 | ✅ |
+| 工件 | `artifacts/indoor_e2i_e3_odom_east_velfix_050_summary_20260902_z18.json` |
 
-**阻塞**：sim east SPAWN（非估器回归）。
+**过门**：F-cap 同 G1–G4，判据 **`arrived_hat`** — **未过**（π 真到点，hat 判未到）。
 
+**下一步**：序 5 — 人令 E3.2′ 小 FT，或接受探针水位、暂不主张 E3 传感完成。
 ---
 
 ## 序 5 · F9 — E3 ckpt × velfix 未对齐

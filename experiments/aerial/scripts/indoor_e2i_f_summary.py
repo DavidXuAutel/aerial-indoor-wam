@@ -122,6 +122,8 @@ def summarize_eval(
     success_dist_m: float,
     gate_mode: str = "cap",
     spawn_max_steps: int = 8,
+    pose_source: str = "gt_proxy",
+    pose_note: str = "probe only",
     meta: Dict[str, Any] | None = None,
     extra: Dict[str, Any] | None = None,
 ) -> Dict[str, Any]:
@@ -176,8 +178,8 @@ def summarize_eval(
         "spawn_max_steps": spawn_max_steps,
         "spawn_excluded_from_primary": use_cap,
         "success_dist_m": success_dist_m,
-        "pose_source": "gt_proxy",
-        "pose_note": "probe only",
+        "pose_source": pose_source,
+        "pose_note": pose_note,
         "annotation": ann,
         "annotation_meta": meta or {},
         "routes": routes,
@@ -221,6 +223,8 @@ def main() -> int:
     ap.add_argument("--routes", required=True)
     ap.add_argument("--success-dist", type=float, default=0.50)
     ap.add_argument("--gate-mode", choices=["cap", "legacy"], default="cap")
+    ap.add_argument("--pose-source", default="gt_proxy")
+    ap.add_argument("--pose-note", default="probe only")
     ap.add_argument("--out", default="")
     args = ap.parse_args()
 
@@ -242,6 +246,8 @@ def main() -> int:
         routes=args.routes,
         success_dist_m=args.success_dist,
         gate_mode=args.gate_mode,
+        pose_source=args.pose_source,
+        pose_note=args.pose_note,
         meta=meta,
     )
     out_path = Path(args.out) if args.out else Path(f"artifacts/indoor_e2i_{args.tag}_summary_{args.stamp}.json")

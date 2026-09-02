@@ -70,6 +70,7 @@ GATE_MODE=cap TAG="$TAG" STAMP="$STAMP" PROTOCOL="$PROTOCOL" ANN="$ANN" ROUTES="
   $AERIAL_PY experiments/aerial/scripts/indoor_e2i_f_summary.py \
   --tag "$TAG" --stamp "$STAMP" --protocol "$PROTOCOL" \
   --ann "$ANN" --routes "$ROUTES" --success-dist 0.50 --gate-mode cap \
+  --pose-source odom_from_imu_rgb --pose-note "E3 formal; arrived_hat is primary" \
   --out "artifacts/indoor_e2i_${TAG}_summary_${STAMP}.json" \
   2>&1 | tee -a "$LOG"
 

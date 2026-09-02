@@ -1,9 +1,9 @@
 # Indoor WAM — STATUS（主航道）
 
-> **更新**：2026-09-02（**主航道收口** · F-cap ✅ · E3 formal odom **deferred**）  
-> **E3 结论**：管线 ✅ · post-FT G1 ❌ · velfix 审计 east **2/3 arr_hat** · formal east odom summary **deferred**（sim SPAWN hygiene，**非门**）  
+> **更新**：2026-09-02（F-cap ✅ · **E3 formal odom east FAIL G1** · spawn z=1.8）  
+> **E3 结论**：formal east odom — spawn=0 · **3/3 gt** · **1/3 hat** · G1 ❌（非 SPAWN）  
 > **主门**：[`INDOOR_E2I_F_PLAN_20260901.md`](INDOOR_E2I_F_PLAN_20260901.md) §1.1 F-cap  
-> **干净集 east**：`building99_indoor_short_routes_clean_e.json`（125 可 `cp` 至 `artifacts/`）  
+> **干净集 east**：`building99_indoor_short_routes_clean_e.json`（z=1.8 · `spawn_z_floor_cmd_m=1.8`）  
 > **125 handoff（归档）**：[`INDOOR_E3_125_PROMPT_20260902.md`](INDOOR_E3_125_PROMPT_20260902.md)  
 > **缺口续作**：[`INDOOR_GAP_CONTINUATION_20260902.md`](INDOOR_GAP_CONTINUATION_20260902.md)（12 项 · 产品 0/12）
 
@@ -21,7 +21,7 @@
 | **F-collect east** | ✅ 39 usable @0.50 gt_proxy |
 | **E3 管线 E3.0–E3.3** | ✅ 已跑 · post-FT G1 ❌（odom hat 全灭，根因已定位） |
 | **E3 velfix + E3.5 审计** | ✅ east drift 0.93→0.11 m · **2/3 arr_hat** |
-| **E3 formal odom east** | ⏸ **deferred** — sim east SPAWN（gt_proxy 探针亦首步撞）；**非门** |
+| **E3 formal odom east** | ❌ **FAIL G1**（z18）— spawn=0 · **3/3 arrived_gt** · **1/3 arrived_hat** · mean d_gt≈0.44 / d_hat 0.46–0.72 |
 | spawn watch | ⏸ 可选后台（125）；**不阻塞 close**；绿了可补 summary |
 | **缺口续作序 6 F6** | ❌ F3 south cap **FAIL** — 3/3 SPAWN · spawn_rate=1.0 · **0 scored** |
 | **缺口续作序 7 F1** | ⚠️ 审计：E mix **fixture_frac=0.25**；F-collect 39ep **assist=none** |

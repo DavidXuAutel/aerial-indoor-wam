@@ -69,7 +69,7 @@ ss -ltn | grep -q 41451
 
 : >"$LOG"
 {
-  echo "[$TAG] @0.50 act=$ACT routes=$ROUTES ann=$ANN spawn_retry=3 $(date -Is)"
+  echo "[$TAG] @0.50 act=$ACT routes=$ROUTES ann=$ANN spawn_retry=6 hold=1 $(date -Is)"
 } | tee -a "$LOG"
 
 for SEED in 0 1 2; do
@@ -81,10 +81,12 @@ from pathlib import Path
 cfg = yaml.safe_load(Path("$CFG_EVAL").read_text()) or {}
 env = cfg.setdefault("env", {})
 env["seed"] = int("$SEED")
-env["spawn_retry_max"] = 3
+env["spawn_retry_max"] = 6
 env["spawn_min_z_m"] = 1.4
 env["spawn_z_bump_m"] = 0.15
-env["spawn_settle_s"] = 0.35
+env["spawn_settle_s"] = 0.50
+env["spawn_hold"] = True
+env["spawn_xy_nudge_m"] = 0.30
 cfg.setdefault("reward", {})["success_dist_m"] = float("$SUCCESS_DIST")
 Path("$TMP").write_text(yaml.safe_dump(cfg, sort_keys=False))
 PY

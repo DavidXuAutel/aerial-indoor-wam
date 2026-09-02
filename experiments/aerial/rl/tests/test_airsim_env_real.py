@@ -67,6 +67,7 @@ class _FakeClient:
         self.control_enabled = False
         self.armed = False
         self.set_poses = []
+        self.velocity_cmds = []
 
     def confirmConnection(self):
         return True
@@ -79,6 +80,13 @@ class _FakeClient:
 
     def simSetVehiclePose(self, pose, ignore_collision, vehicle_name=None):
         self.set_poses.append(pose)
+
+    def moveByVelocityAsync(self, vx, vy, vz, duration, yaw_mode=None, vehicle_name=None):
+        self.velocity_cmds.append((vx, vy, vz, duration))
+        class _F:
+            def join(self_inner):
+                return None
+        return _F()
 
     def getMultirotorState(self, vehicle_name=None):
         return self._state
@@ -111,7 +119,7 @@ def test_observe_state_negates_ned_z_to_up_world():
 
 
 def test_reset_negates_start_z_into_ned_pose():
-    e, client = _make_env(health_check=False, warmup_frames=0)
+    e, client = _make_env(health_check=False, warmup_frames=0, spawn_settle_s=0.0)
     e._grab_scene = lambda client: np.zeros((8, 8, 3), dtype=np.uint8)
     e._grab_depth = lambda client: None
     e._grab_imu = lambda client: {}
@@ -124,9 +132,85 @@ def test_reset_negates_start_z_into_ned_pose():
     assert client.set_poses[0].position.x_val == pytest.approx(0.0)
 
 
+def test_spawn_hold_issues_zero_velocity_during_settle():
+    e, client = _make_env(health_check=False, warmup_frames=0, spawn_settle_s=0.2, spawn_hold=True)
+    e._grab_scene = lambda client: np.zeros((8, 8, 3), dtype=np.uint8)
+    e._grab_depth = lambda client: None
+    e._grab_imu = lambda client: {}
+    e._grab_collision = lambda client: False
+    e.reset(_EPISODE)
+    assert client.velocity_cmds, "spawn settle must hold with zero velocity"
+    assert client.velocity_cmds[0][:3] == (0.0, 0.0, 0.0)
+
+
+def test_spawn_retries_xy_nudge_when_first_pose_sunk():
+    """First observe reports floor sink (z≈0); later attempt with XY offset OK."""
+    e, client = _make_env(
+        health_check=False,
+        warmup_frames=0,
+        spawn_settle_s=0.0,
+        spawn_retry_max=6,
+        spawn_xy_nudge_m=0.30,
+        spawn_min_z_m=1.4,
+    )
+    e._grab_scene = lambda client: np.zeros((8, 8, 3), dtype=np.uint8)
+    e._grab_depth = lambda client: None
+    e._grab_imu = lambda client: {}
+    e._grab_collision = lambda client: False
+    calls = {"n": 0}
+
+    def _observe(force_depth=False):
+        from experiments.aerial.rl.env.obs import Observation
+        calls["n"] += 1
+        # Fail until we have tried a non-zero XY offset (2nd candidate).
+        z = 0.08 if calls["n"] < 2 else 1.5
+        return Observation(
+            rgb=np.zeros((8, 8, 3), dtype=np.uint8),
+            state=np.array([1.0, 0.0, z, 0, 0, 0, 0], dtype=np.float32),
+            collided=False,
+            info={},
+        )
+
+    e.observe = _observe  # type: ignore[method-assign]
+    ep = {"pos": [[1.0, 0.0, 1.5], [4.0, 0.0, 1.5]], "yaw": [0.0, 0.0]}
+    obs = e.reset(ep)
+    assert float(obs.position[2]) >= 1.4
+    assert len(client.set_poses) >= 2
+    assert client.set_poses[1].position.x_val == pytest.approx(1.3)  # +0.30 nudge
+
+
+def test_spawn_marks_failed_when_all_retries_sunk():
+    e, client = _make_env(
+        health_check=False,
+        warmup_frames=0,
+        spawn_settle_s=0.0,
+        spawn_retry_max=2,
+        spawn_xy_nudge_m=0.0,
+        spawn_min_z_m=1.4,
+    )
+    e._grab_scene = lambda client: np.zeros((8, 8, 3), dtype=np.uint8)
+    e._grab_depth = lambda client: None
+    e._grab_imu = lambda client: {}
+    e._grab_collision = lambda client: False
+
+    def _observe(force_depth=False):
+        from experiments.aerial.rl.env.obs import Observation
+        return Observation(
+            rgb=np.zeros((8, 8, 3), dtype=np.uint8),
+            state=np.array([1.0, 0.0, 0.05, 0, 0, 0, 0], dtype=np.float32),
+            collided=False,
+            info={},
+        )
+
+    e.observe = _observe  # type: ignore[method-assign]
+    obs = e.reset({"pos": [[1.0, 0.0, 1.5], [4.0, 0.0, 1.5]], "yaw": [0.0, 0.0]})
+    assert obs.collided is True
+    assert obs.info.get("spawn_failed") is True
+
+
 # -- health fail-fast (Fix #3) ------------------------------------------
 def test_health_check_raises_when_imu_missing():
-    e, _ = _make_env(health_check=True, warmup_frames=0)
+    e, _ = _make_env(health_check=True, warmup_frames=0, spawn_settle_s=0.0)
     e._grab_scene = lambda client: np.zeros((8, 8, 3), dtype=np.uint8)
     e._grab_depth = lambda client: np.zeros((8, 8), dtype=np.float32)
     e._grab_imu = lambda client: {}          # CV-only build -> no IMU
@@ -136,7 +220,7 @@ def test_health_check_raises_when_imu_missing():
 
 
 def test_health_check_raises_when_depth_missing():
-    e, _ = _make_env(health_check=True, warmup_frames=0)
+    e, _ = _make_env(health_check=True, warmup_frames=0, spawn_settle_s=0.0)
     e._grab_scene = lambda client: np.zeros((8, 8, 3), dtype=np.uint8)
     e._grab_depth = lambda client: None      # no depth from renderer
     e._grab_imu = lambda client: {"ang_vel": [0, 0, 0], "lin_acc": [0, 0, 9.807]}
@@ -147,7 +231,7 @@ def test_health_check_raises_when_depth_missing():
 
 # -- lifecycle: close on failed reset (Fix #4) --------------------------
 def test_failed_reset_releases_control():
-    e, client = _make_env(health_check=True, warmup_frames=0)
+    e, client = _make_env(health_check=True, warmup_frames=0, spawn_settle_s=0.0)
     e._grab_scene = lambda client: np.zeros((8, 8, 3), dtype=np.uint8)
     e._grab_depth = lambda client: None
     e._grab_imu = lambda client: {}          # fails health -> reset raises

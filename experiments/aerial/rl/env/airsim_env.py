@@ -62,11 +62,15 @@ class AirSimEnvConfig:
     # the H100→4090 path. Health-check on reset still grabs depth once when
     # health_check=True. Set False for Plan-A rate smokes / RGB-first collection.
     grab_depth: bool = True
-    # Teleport spawn hygiene (Building_99 west @ yaw=π can embed ~10–20%).
-    spawn_retry_max: int = 3
+    # Teleport spawn hygiene (Building_99: gravity drop after pose set → floor SPAWN).
+    spawn_retry_max: int = 6
     spawn_min_z_m: float = 1.4
     spawn_z_bump_m: float = 0.15
-    spawn_settle_s: float = 0.35
+    spawn_settle_s: float = 0.50
+    # Hold zero world velocity during settle so physics does not sink into floor.
+    spawn_hold: bool = True
+    # Lateral offsets (m) cycled with Z bumps when the nominal start embeds.
+    spawn_xy_nudge_m: float = 0.30
 
     @classmethod
     def from_env(cls, overrides: Optional[Dict[str, Any]] = None) -> "AirSimEnvConfig":
@@ -140,30 +144,43 @@ class AirSimDroneEnv:
         # crashed reset never leaves the single-consumer renderer occupied.
         try:
             target_z = float(start[2])
-            z_try = target_z
             max_tries = max(1, int(self.config.spawn_retry_max))
+            xy_offsets = self._spawn_xy_offsets()
             obs: Optional[Observation] = None
             for attempt in range(max_tries):
+                ox, oy = xy_offsets[attempt % len(xy_offsets)]
+                z_level = attempt // len(xy_offsets)
+                z_try = target_z + z_level * float(self.config.spawn_z_bump_m)
                 # Episode positions are +up world; AirSim pose is NED, so negate z.
                 pose = airsim.Pose(
-                    airsim.Vector3r(float(start[0]), float(start[1]), -float(z_try)),
+                    airsim.Vector3r(
+                        float(start[0]) + float(ox),
+                        float(start[1]) + float(oy),
+                        -float(z_try),
+                    ),
                     airsim.to_quaternion(0.0, 0.0, float(yaw0)),
                 )
                 client.simSetVehiclePose(pose, True, **self._vk)
-                settle = float(self.config.spawn_settle_s)
-                if settle > 0:
-                    time.sleep(settle)
+                self._spawn_settle(client)
 
                 for _ in range(max(0, self.config.warmup_frames)):
                     self._grab_scene(client)
 
                 obs = self.observe(force_depth=True)
                 if self._spawn_ok(obs, target_z):
+                    obs.info["spawn_attempt"] = int(attempt)
+                    obs.info["spawn_offset_xy_m"] = [float(ox), float(oy)]
+                    obs.info["spawn_z_m"] = float(z_try)
                     break
-                if attempt + 1 < max_tries:
-                    z_try += float(self.config.spawn_z_bump_m)
 
             assert obs is not None
+            if not self._spawn_ok(obs, target_z):
+                # Do not hand callers a sunk pose (z≈0) that becomes floor SPAWN
+                # on the first policy step — mark failed and keep collided=True.
+                obs.collided = True
+                obs.info["spawn_failed"] = True
+                z = float(np.asarray(obs.position, dtype=np.float64).reshape(3)[2])
+                obs.info["spawn_z_observed_m"] = z
             if self.config.health_check:
                 self._assert_healthy(obs)
             return obs
@@ -235,11 +252,49 @@ class AirSimDroneEnv:
             info={"goal": None if self._goal is None else self._goal.tolist()},
         )
 
+    def _spawn_xy_offsets(self) -> list[tuple[float, float]]:
+        n = max(0.0, float(self.config.spawn_xy_nudge_m))
+        if n <= 0:
+            return [(0.0, 0.0)]
+        return [
+            (0.0, 0.0),
+            (n, 0.0),
+            (-n, 0.0),
+            (0.0, n),
+            (0.0, -n),
+            (n, n),
+            (-n, n),
+            (n, -n),
+            (-n, -n),
+        ]
+
+    def _spawn_settle(self, client: Any) -> None:
+        """Hold altitude during settle — bare sleep lets gravity sink into floor."""
+        settle = float(self.config.spawn_settle_s)
+        if settle <= 0:
+            return
+        if not bool(self.config.spawn_hold):
+            time.sleep(settle)
+            return
+        airsim = self._airsim
+        try:
+            yaw_mode = airsim.YawMode(is_rate=True, yaw_or_rate=0.0)
+            fut = client.moveByVelocityAsync(
+                0.0, 0.0, 0.0, settle, yaw_mode=yaw_mode, **self._vk
+            )
+            if hasattr(fut, "join"):
+                fut.join()
+            else:
+                time.sleep(settle)
+        except Exception:  # noqa: BLE001 - settle best-effort
+            time.sleep(settle)
+
     def _spawn_ok(self, obs: Observation, target_z: float) -> bool:
         if bool(getattr(obs, "collided", False)):
             return False
         z = float(np.asarray(obs.position, dtype=np.float64).reshape(3)[2])
-        floor = min(float(self.config.spawn_min_z_m), float(target_z) - 0.08)
+        # Require both configured min Z and near the commanded start altitude.
+        floor = max(float(self.config.spawn_min_z_m), float(target_z) - 0.25)
         return z >= floor
 
     def observe_state(self) -> np.ndarray:

@@ -43,7 +43,8 @@
 
 ## Hygiene backlog（不过门）
 
-- east：~11:05 起 intermittent SPAWN（gt/odom 同现）· watch 可选  
-- west：**F10 探针 20260902** — physics sweep 0/12 撞；**policy step 0 → `floorAtri_2`**（z≈−0.53，贴地/高度）  
-- south：**F10** SPAWN steps=1；**F3 cap 20260902** 3/3 SPAWN · **不可扩主门**  
+- **spawn fix 20260902**：teleport 后 **hold 零速** + XY nudge + Z bump；路由 z **1.5→1.6**；失败标 `spawn_failed`  
+- east：~11:05 起 intermittent SPAWN（gt/odom 同现）· watch 可选 · **待 fix 后复探**  
+- west：旧探针 policy step0 → `floorAtri_2`（z≈0.08 下沉）· **归因重力 settle，非纯 XY 进墙**  
+- south：旧 F3 3/3 SPAWN · **待 fix 后复探**  
 - 动态人动线：部署 hold/换点；不进 F-cap

@@ -164,10 +164,12 @@ def main() -> int:
         grab_depth=True,
         step_hz=5.0,
         health_check=False,
-        spawn_retry_max=3,
+        spawn_retry_max=6,
         spawn_min_z_m=1.4,
         spawn_z_bump_m=0.15,
-        spawn_settle_s=0.35,
+        spawn_settle_s=0.50,
+        spawn_hold=True,
+        spawn_xy_nudge_m=0.30,
     )
     env = AirSimDroneEnv(cfg)
     # warm reset

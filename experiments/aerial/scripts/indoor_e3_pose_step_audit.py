@@ -144,10 +144,12 @@ def main() -> int:
         env_cfg["grab_depth"] = True
         env_cfg["health_check"] = False
         env_cfg["seed"] = seed
-        env_cfg["spawn_retry_max"] = 3
+        env_cfg["spawn_retry_max"] = 6
         env_cfg["spawn_min_z_m"] = 1.4
         env_cfg["spawn_z_bump_m"] = 0.15
-        env_cfg["spawn_settle_s"] = 0.35
+        env_cfg["spawn_settle_s"] = 0.50
+        env_cfg["spawn_hold"] = True
+        env_cfg["spawn_xy_nudge_m"] = 0.30
         import os as _os
         env_cfg["camera"] = _os.environ.get("AIRSIM_CAMERA", env_cfg.get("camera", "0"))
         env_cfg["vehicle"] = _os.environ.get("AIRSIM_VEHICLE", env_cfg.get("vehicle", "drone_1"))

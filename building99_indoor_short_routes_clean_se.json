@@ -3,18 +3,40 @@
     "trajectory_id": "B99_lobby_south_3m",
     "gpt_instruction": "Building_99 lobby south 3m",
     "pos": [
-      [0.0, -1.0, 1.5],
-      [0.0, -4.0, 1.5]
+      [
+        0.0,
+        -1.0,
+        1.6
+      ],
+      [
+        0.0,
+        -4.0,
+        1.6
+      ]
     ],
-    "yaw": [-1.5708, -1.5708]
+    "yaw": [
+      -1.5708,
+      -1.5708
+    ]
   },
   {
     "trajectory_id": "B99_lobby_east_from_1",
     "gpt_instruction": "Building_99 lobby east from x=1",
     "pos": [
-      [1.0, 0.0, 1.5],
-      [4.0, 0.0, 1.5]
+      [
+        1.0,
+        0.0,
+        1.6
+      ],
+      [
+        4.0,
+        0.0,
+        1.6
+      ]
     ],
-    "yaw": [0.0, 0.0]
+    "yaw": [
+      0.0,
+      0.0
+    ]
   }
 ]

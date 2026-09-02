@@ -30,10 +30,12 @@ from pathlib import Path
 cfg = yaml.safe_load(Path("configs/aerial_rl_indoor_shield_v3.yaml").read_text()) or {}
 env = cfg.setdefault("env", {})
 env["seed"] = 0
-env["spawn_retry_max"] = 5
+env["spawn_retry_max"] = 6
 env["spawn_min_z_m"] = 1.4
 env["spawn_z_bump_m"] = 0.15
-env["spawn_settle_s"] = 0.5
+env["spawn_settle_s"] = 0.50
+env["spawn_hold"] = True
+env["spawn_xy_nudge_m"] = 0.30
 cfg.setdefault("reward", {})["success_dist_m"] = 0.50
 Path("/tmp/south_spawn_probe_cfg.yaml").write_text(yaml.safe_dump(cfg, sort_keys=False))
 PY

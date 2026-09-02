@@ -9,11 +9,11 @@
 | 序# | ID | 缺口 | 09-02 | 产品结案 | 下一刀归属 |
 |-----|-----|------|-------|----------|------------|
 | 1 | F5 | 指标污染 | 纪律+F-cap | ⚠️ 流程 | Mac 文档 |
-| 2 | F10 | SPAWN/可复现 | ✅ 探针 | ❌ | hygiene 结论已落盘 |
-| 3 | F2 | gt_proxy | E3 签 C | ❌ | 估器重开=VIO/真机 |
+| 2 | F10 | SPAWN/可复现 | ✅ east/south/west z18 | ❌ | 3 日稳定未做 |
+| 3 | F2 | gt_proxy | E3 签 C · **VIO 探针脚手架** | ❌ | OpenVINS 孤立轨见 VIO PROBE 文档 |
 | 4 | F8 | E3 formal | 📦 签 C · G1 未过 | ❌ | **停追** sim hat |
 | 5 | F9 | E3 ckpt×velfix | 📦 随签 C 搁置 | ❌ | 人令 VIO 后再议 |
-| 6 | F6 | 单路由 | **south PASS z18** | ❌ | west hygiene / 产品扩 |
+| 6 | F6 | 单路由 | **south PASS z18** | ❌ | west 卫生已复探 |
 | 7 | F1 | 夹具训/none验 | ⚠️ 审计 | ❌ | fixture_frac=0.25 |
 | 8 | F3 | π 无罩近场 | 罩已修 | ❌ | 归档 shield-off |
 | 9 | F7 | @0.20 产品精度 | ✅ stretch 44% | ❌ | 旁注已报 |
@@ -75,6 +75,8 @@ bash experiments/aerial/scripts/run_e2i_f_hygiene_south_spawn_probe.sh
 **继续**：见序 4–5（E3 链）；F-cap 成绩 **只标 probe**。
 
 **过门（产品）**：独立 **E3-cap** 门须 **真 VIO/`vio_est` 或真机** 后再开；仿真 odom **签 C 不凑 G1**。报表始终 **双报 gt/hat**。
+
+**2026-09-02 孤立重开（脚手架）**：[`INDOOR_VIO_OPENSOURCE_PROBE_20260902.md`](INDOOR_VIO_OPENSOURCE_PROBE_20260902.md) — OpenVINS · EuRoC 导出 · ATE · `vio_est` bridge；**不**占 AirSim、**不**改默认 `pose_source`。下一步空闲机 P1（真 OpenVINS + indoor npz）。
 
 ---
 

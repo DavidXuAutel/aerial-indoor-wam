@@ -70,10 +70,9 @@ bash experiments/aerial/scripts/run_e2i_e3_auto_after_collect.sh
 
 ## 7. 下一步（E3 后）
 
-1. **E3.5 逐步审计**（125）：`run_e2i_e3_pose_step_audit.sh` · routes 1,2 · seeds 0–2  
-2. **估器轨**（优先）：修/标定 `odom_from_imu_rgb` 终态 CE，再决定是否二轮 FT  
-3. **合同轨**（备选）：E3-cap-east-only + 双报 gt/hat；**禁止**用 gt 冒充 E3 主完成  
-4. **仍禁**：spawn 死磕；盲加 iters；gt_proxy 写 E3 完成态
+**签 C 后**：仿真估器轨 **停**。重开仅人令（开源 VIO / 真机）。主航道继续 F-hygiene 与缺口续作其它序。
+
+~~1. E3.5…~~ ~~2. 估器 CE…~~ — 已归档，见 §11。
 
 ## 8. E3.4 诊断（2026-09-02）
 
@@ -120,3 +119,17 @@ bash experiments/aerial/scripts/run_e2i_e3_pose_step_audit.sh
 | south arr_hat | 0/3 | **2/3** |
 
 **收口（2026-09-02）**：formal east odom re-eval **deferred**（sim SPAWN hygiene，**非门**）。`run_e2i_e3_east_spawn_watch.sh` 在 125 **可选**后台 — 绿了补 `artifacts/indoor_e2i_e3_odom_east_sg_velfix_050_summary_*`；**不阻塞主航道 close**。E3.2′ 小 FT **仅人令**。
+
+## 11. 签 C — 停追仿真 E3-hat（2026-09-02 · 人令）
+
+**裁定**：仿真里用 `odom_from_imu_rgb`（开环 `v·dt`）刷 `arrived_hat` G1 **性价比低**（真机分布会重来）；**不再**做 scale/dt/梯形/E3.2′ 盲追。
+
+| 项 | 口径 |
+|----|------|
+| 权威双报 | z18：`arrived_gt=3/3` · `arrived_hat=1/3` · spawn=0 · G2/G3 ✅ · **G1 未过** |
+| E3 传感完成态 | **未宣称** |
+| 主航道 | F-cap（gt_proxy）仍 ✅ close |
+| 停做 | sim odom CE 兔洞；无人令 E3.2′ |
+| 重开条件（人令） | 开源 VIO 接 `vio_est`，或真机/部署传感轨 |
+
+工件：`artifacts/indoor_e2i_e3_odom_east_velfix_050_summary_20260902_z18.json`

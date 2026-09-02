@@ -10,9 +10,9 @@
 |-----|-----|------|-------|----------|------------|
 | 1 | F5 | 指标污染 | 纪律+F-cap | ⚠️ 流程 | Mac 文档 |
 | 2 | F10 | SPAWN/可复现 | ✅ 探针 | ❌ | hygiene 结论已落盘 |
-| 3 | F2 | gt_proxy | E3 开 | ❌ | 125 odom formal |
-| 4 | F8 | E3 formal | ❌ G1 1/3 hat | ❌ | 人令 E3.2′ 或停 |
-| 5 | F9 | E3 ckpt×velfix | 未重评 | ❌ | 125 → 人令 H100 |
+| 3 | F2 | gt_proxy | E3 签 C | ❌ | 估器重开=VIO/真机 |
+| 4 | F8 | E3 formal | 📦 签 C · G1 未过 | ❌ | **停追** sim hat |
+| 5 | F9 | E3 ckpt×velfix | 📦 随签 C 搁置 | ❌ | 人令 VIO 后再议 |
 | 6 | F6 | 单路由 | east only | ❌ | **south 3/3 SPAWN** |
 | 7 | F1 | 夹具训/none验 | ⚠️ 审计 | ❌ | fixture_frac=0.25 |
 | 8 | F3 | π 无罩近场 | 罩已修 | ❌ | 归档 shield-off |
@@ -74,56 +74,33 @@ bash experiments/aerial/scripts/run_e2i_f_hygiene_south_spawn_probe.sh
 
 **继续**：见序 4–5（E3 链）；F-cap 成绩 **只标 probe**。
 
-**过门（产品）**：独立 **E3-cap** 门：odom @0.50 · east · `arrived_hat` G1≥50% · **双报 gt/hat**。
+**过门（产品）**：独立 **E3-cap** 门须 **真 VIO/`vio_est` 或真机** 后再开；仿真 odom **签 C 不凑 G1**。报表始终 **双报 gt/hat**。
 
 ---
 
 ## 序 4 · F8 — E3 formal odom east
 
-**缺口**：E3.3 post-FT **0/6 arrived_hat**；velfix 审计 2/3（非 formal）。
+**缺口**：E3.3 / formal z18 **`arrived_hat` 未过 G1**（估器开环 CE，非 π 不会飞）。
 
-```bash
-STAMP=20260902_z18 bash experiments/aerial/scripts/run_e2i_e3_east_velfix_eval.sh
-```
-
-**2026-09-02_z18 结果**（E 头 · odom · z_floor=1.8 · spawn hold）：
+**2026-09-02_z18 双报（权威归档）**：
 
 | 指标 | 值 |
 |------|-----|
 | spawn_rate | **0** |
 | arrived_gt | **3/3** |
-| arrived_hat (G1) | **1/3** ❌ |
-| d_end gt / hat | ≈0.40–0.46 / 0.46–0.72 |
+| arrived_hat (G1) | **1/3** · **未过** |
 | G2/G3 | ✅ |
 | 工件 | `artifacts/indoor_e2i_e3_odom_east_velfix_050_summary_20260902_z18.json` |
 
-**逐步审计 `*_z18_vdt`**：east mean Δerr≈0.02 m/步；长航迹 cum drift 可达 **0.9 m**；`dt_wall≈0.33 s` vs `dt_cmd=0.2`；`under_hat≈under_vdt≈+4 mm/步` 沿迹欠积分（×N 步 ≈ gap）。
+**签 C（人令 2026-09-02）**：**停追** sim odom CE（scale / dt / 梯形 / E3.2′）。**不**写 E3 传感完成。重开 = 开源 VIO→`vio_est` 或真机（另令人令）。
 
-**试修**：`dt_cmd` 封顶 / 梯形速度 → formal **更差**（0/3 hat，gap≈0.5–0.9）→ **已回退** wall-dt velfix（z18 仍最佳：1/3 hat）。
-
-**下一刀候选（人令）**：① 沿迹 scale 标定；② stop_on hat 双报；③ E3.2′ 小 FT 适应 CE。
 ---
 
 ## 序 5 · F9 — E3 ckpt × velfix 未对齐
 
-**缺口**：FT 在 pre-velfix 估器语料上；velfix 后 π 对 p̂ 误差分布未知。
+**缺口**：FT 与 velfix 后 p̂ 分布未对齐。
 
-**继续**：
-
-| 步 | 条件 | 动作 |
-|----|------|------|
-| 5.1 | 序 4 summary G1≥50% | **closure** — 可能不需二轮 FT |
-| 5.2 | 序 4 G1 仍差 | **人令** E3.2′ 小 FT（≤200 iters · train=eval=odom · velfix 语料重标） |
-| 5.3 | 序 4 前 | 禁盲 400 iters |
-
-```bash
-# 5.2 入口（人令后）
-bash experiments/aerial/scripts/run_e2i_e3_odom_collect.sh   # 可选补采
-bash experiments/aerial/scripts/run_e2i_e3_h100_ft.sh        # 小 iters override
-bash experiments/aerial/scripts/run_e2i_e3_odom_eval.sh
-```
-
-**过门**：序 4 同；且 gap diag mean(d_hat−d_gt) **< 0.25 m**。
+**签 C**：随序 4 **搁置**；禁盲 400 iters。VIO/真机重开估器后再议是否小 FT。
 
 ---
 

@@ -265,7 +265,7 @@ def main() -> int:
     west = ann[0]
     east = ann[2]  # same start [1,0,1.5], yaw 0
 
-    cfg = AirSimEnvConfig(camera="0", vehicle="drone_1", width=224, height=224, step_hz=5.0)
+    cfg = AirSimEnvConfig(camera="0", vehicle="drone_1", width=640, height=480, step_hz=5.0)
     env = AirSimDroneEnv(cfg)
     client = env._connect()
     airsim = env._airsim

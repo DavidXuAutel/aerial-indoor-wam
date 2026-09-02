@@ -97,6 +97,11 @@ def episode_arrays(transitions: Sequence[Transition]) -> Dict[str, np.ndarray]:
     # Depth is optional per-step (grab_depth); store it only if every frame has it.
     if all(t.obs.depth is not None for t in transitions):
         arrays["depth"] = np.stack([np.asarray(t.obs.depth, np.float32) for t in transitions])
+    # Same-grab fan-out (optional): native capture for VIO / YOLO side branch.
+    if all(getattr(t.obs, "rgb_vio", None) is not None for t in transitions):
+        arrays["rgb_vio"] = np.stack([np.asarray(t.obs.rgb_vio, np.uint8) for t in transitions])
+    if all(getattr(t.obs, "rgb_yolo", None) is not None for t in transitions):
+        arrays["rgb_yolo"] = np.stack([np.asarray(t.obs.rgb_yolo, np.uint8) for t in transitions])
     # Episode goal for V1-② reward features (optional; legacy corpora omit it).
     goal = None
     for tr in transitions:

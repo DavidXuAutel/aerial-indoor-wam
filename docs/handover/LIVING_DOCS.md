@@ -16,6 +16,10 @@
 | **3** | [`INDOOR_E3_PLAN_20260902.md`](INDOOR_E3_PLAN_20260902.md) | **E3 全量 odom** |
 | **3b** | [`INDOOR_E3_125_PROMPT_20260902.md`](INDOOR_E3_125_PROMPT_20260902.md) | **125 同步 / spawn watch** |
 | **3c** | [`INDOOR_GAP_CONTINUATION_20260902.md`](INDOOR_GAP_CONTINUATION_20260902.md) | **12 致命缺口逐项续作** |
+| **3d** | [`INDOOR_VIO_OPENSOURCE_PROBE_20260902.md`](INDOOR_VIO_OPENSOURCE_PROBE_20260902.md) | **开源 VIO 孤立探针**（OpenVINS→`vio_est`；脚手架） |
+| **3e** | [`INDOOR_VIO_125_PROMPT_20260902.md`](INDOOR_VIO_125_PROMPT_20260902.md) | **125：编译 OpenVINS + P0/P1**（历史 prompt） |
+| **3f** | [`INDOOR_VIO_PROBE_RESULT_20260902.md`](INDOOR_VIO_PROBE_RESULT_20260902.md) | **实测结果**（P0✅ P1b❌ thrifty S1/S2✅） |
+| **3g** | [`INDOOR_VIO_THRIFTY_ARCHIVE_20260902.md`](INDOOR_VIO_THRIFTY_ARCHIVE_20260902.md) | **📦 VIO thrifty 签过归档**（停追 sim ZOH；重开=真机） |
 | **4** | [`INDOOR_FULL_STACK_20260831.md`](INDOOR_FULL_STACK_20260831.md) | 方案/模型/接线快照 |
 | **5** | [`../../experiments/aerial/RUNBOOK_indoor_0xm.md`](../../experiments/aerial/RUNBOOK_indoor_0xm.md) | §8.10 |
 

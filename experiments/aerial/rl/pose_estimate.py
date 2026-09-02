@@ -5,12 +5,15 @@
 
 Allowed ``pose_source`` values (frozen):
   * ``odom_from_imu_rgb`` — dead-reckoning from body deltas + IMU yaw (mainline default)
-  * ``vio_est``           — full VIO front-end (future hook; same interface)
+  * ``vio_est``           — OpenVINS: live stream (``AERIAL_VIO_LIVE=1``) or
+                            offline TUM (``AERIAL_VIO_TRAJ``); see
+                            ``docs/handover/INDOOR_VIO_OPENSOURCE_PROBE_20260902.md``
   * ``gt_proxy``          — simulation stub using GT pose; **must** be declared in reports
 """
 from __future__ import annotations
 
 import math
+import os
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, Literal, Optional
 
@@ -245,10 +248,26 @@ def make_pose_estimator(source: str) -> PoseEstimator:
     src = str(source or "odom_from_imu_rgb").lower()
     if src == "gt_proxy":
         return GtProxyPoseEstimator()
-    if src == "vio_est":
-        return OdomFromImuRgbPoseEstimator()
     if src == "odom_from_imu_rgb":
         return OdomFromImuRgbPoseEstimator()
+    if src == "vio_est":
+        # Explicit OpenVINS bridge — never silently alias to dead-reckoning.
+        # Live closed-loop: AERIAL_VIO_LIVE=1 (+ OPENVINS_STREAM_BIN).
+        # Offline replay: AERIAL_VIO_TRAJ=/path/to/est_tum.txt
+        live = os.environ.get("AERIAL_VIO_LIVE", "").strip().lower() in (
+            "1",
+            "true",
+            "yes",
+        )
+        if live:
+            from experiments.aerial.vio_probe.live_bridge import (
+                make_live_vio_est_pose_estimator,
+            )
+
+            return make_live_vio_est_pose_estimator()
+        from experiments.aerial.vio_probe.pose_bridge import make_vio_est_pose_estimator
+
+        return make_vio_est_pose_estimator()
     raise ValueError(f"unknown pose_source {source!r}; allowed: {POSE_SOURCES}")
 
 

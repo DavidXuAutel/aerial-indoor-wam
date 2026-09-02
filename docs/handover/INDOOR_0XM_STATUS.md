@@ -33,8 +33,8 @@
 - **可 close**：F-cap 主完成态；spawn 工程修复（不过产品 3 日稳定门）。  
 - **E3 签 C**：停止仿真 odom 积分/标定/E3.2′ 盲追；权威双报工件 `artifacts/indoor_e2i_e3_odom_east_velfix_050_summary_20260902_z18.json`。  
 - **禁止**：gt_proxy / `arrived_gt` 冒充 E3 传感完成；无人令盲 FT；再开 sim CE 兔洞。  
-- **估器重开（人令）**：开源 VIO → `vio_est`，或真机实测轨。  
-- **VIO 孤立探针（2026-09-02）**：选型 **OpenVINS**；仓内 `experiments/aerial/vio_probe/` + `pose_source=vio_est` 需 `AERIAL_VIO_TRAJ`（**不再**静默 alias odom）。下一步 = 空闲机编 OpenVINS + 真 npz 跑 P1（**勿**打断在跑 E2i/F）。
+- **估器重开（人令）**：真机采集+真标定 → `vio_est`（sim thrifty 已归档）。  
+- **VIO thrifty（2026-09-02）**：📦 **签过归档** — S1/S2 ✅（ATE **3.13 m** ≤5）· 停追 AirSim ZOH/占位标定 · 非产品 VIO。见 [`INDOOR_VIO_THRIFTY_ARCHIVE_20260902.md`](INDOOR_VIO_THRIFTY_ARCHIVE_20260902.md)。
 
 ## Legacy 对照（不过门）
 

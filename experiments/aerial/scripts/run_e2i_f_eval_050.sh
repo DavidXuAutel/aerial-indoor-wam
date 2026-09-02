@@ -48,9 +48,10 @@ def fix(caps):
     global changed
     for c in caps:
         if int(c.get("ImageType", -1)) == 0:
-            if c.get("Width") != 224 or c.get("Height") != 224:
-                c["Width"] = 224
-                c["Height"] = 224
+            # Single-cam capture 640×480; fan-out after grab → WAM 224 / VIO / YOLO.
+            if c.get("Width") != 640 or c.get("Height") != 480:
+                c["Width"] = 640
+                c["Height"] = 480
                 changed = True
 
 fix(d["CameraDefaults"]["CaptureSettings"])
@@ -58,7 +59,7 @@ for cam in d["Vehicles"]["drone_1"]["Cameras"].values():
     fix(cam["CaptureSettings"])
 if changed:
     p.write_text(json.dumps(d, indent=2) + "\n")
-    print("[f_eval] settings Scene forced 224×224")
+    print("[f_eval] settings Scene capture forced 640×480 (fan-out after grab)")
 PY
 
 if ! pgrep -f 'Building_99/Binaries' >/dev/null || ! ss -ltn | grep -q 41451; then

@@ -475,7 +475,12 @@ class TeleopGui:
         self._cap_rects.clear()
 
         if obs is not None and getattr(obs, "rgb", None) is not None:
-            rgb = np.asarray(obs.rgb)
+            # Prefer native capture branch for the pilot UI (WAM rgb is 224).
+            rgb = getattr(obs, "rgb_vio", None)
+            if rgb is None:
+                rgb = np.asarray(obs.rgb)
+            else:
+                rgb = np.asarray(rgb)
             if rgb.ndim == 3:
                 frame = np.ascontiguousarray(rgb[:, :, ::-1])
             else:
@@ -685,8 +690,9 @@ def main() -> int:
         port=41451,
         vehicle=os.environ.get("AIRSIM_VEHICLE", "drone_1"),
         camera=os.environ.get("AIRSIM_CAMERA", "0"),
-        width=int(os.environ.get("TELEOP_W", "1280")),
-        height=int(os.environ.get("TELEOP_H", "720")),
+        width=int(os.environ.get("TELEOP_W", os.environ.get("INDOOR_CAPTURE_W", "640"))),
+        height=int(os.environ.get("TELEOP_H", os.environ.get("INDOOR_CAPTURE_H", "480"))),
+        fanout_rgb=os.environ.get("AIRSIM_FANOUT_RGB", "1") not in ("0", "false", "False"),
         grab_depth=True,
         step_hz=5.0,
         health_check=False,
@@ -932,7 +938,13 @@ def main() -> int:
                     hint = "Ended without save. Click START"
                     continue
 
-                _downscale_transitions_rgb(transitions, (224, 224))
+                # ``rgb`` already fan-out to WAM 224; ``rgb_vio`` stays capture WH.
+                # Optional TELEOP_SAVE_* only crushes the WAM ``rgb`` field.
+                save_wh = (
+                    int(os.environ["TELEOP_SAVE_W"]),
+                    int(os.environ["TELEOP_SAVE_H"]),
+                ) if os.environ.get("TELEOP_SAVE_W") and os.environ.get("TELEOP_SAVE_H") else (224, 224)
+                _downscale_transitions_rgb(transitions, save_wh)
                 path = ds.write_episode(out_dir, ep_idx, transitions)
                 qrep = ds.quality_report(transitions)
                 bad = ds.assert_nontrivial(qrep)

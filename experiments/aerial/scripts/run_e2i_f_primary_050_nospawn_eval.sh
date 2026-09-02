@@ -38,9 +38,10 @@ def fix(caps):
     global changed
     for c in caps:
         if int(c.get("ImageType", -1)) == 0:
-            if c.get("Width") != 224 or c.get("Height") != 224:
-                c["Width"] = 224
-                c["Height"] = 224
+            # Single-cam capture 640×480; fan-out after grab → WAM 224 / VIO / YOLO.
+            if c.get("Width") != 640 or c.get("Height") != 480:
+                c["Width"] = 640
+                c["Height"] = 480
                 changed = True
 
 fix(d["CameraDefaults"]["CaptureSettings"])
@@ -48,9 +49,9 @@ for cam in d["Vehicles"]["drone_1"]["Cameras"].values():
     fix(cam["CaptureSettings"])
 if changed:
     p.write_text(json.dumps(d, indent=2) + "\n")
-    print("[f1] settings Scene forced 224×224")
+    print("[f1] settings Scene capture forced 640×480 (fan-out after grab)")
 else:
-    print("[f1] settings Scene already 224×224")
+    print("[f1] settings Scene capture already 640×480")
 PY
 
 if ! pgrep -f 'Building_99/Binaries' >/dev/null || ! ss -ltn | grep -q 41451; then
@@ -156,7 +157,7 @@ out = {
     "annotation": "building99_indoor_short_routes_nospawn_r01.json",
     "dropped": "R01 + R06",
     "routes": "0,1,2,3,5,6",
-    "scene_wh": [224, 224],
+    "scene_wh": [640, 480],
     "r06": "abandoned",
     "seeds_with_arrival": sum(1 for r in rows if r["arrived"] > 0),
     "mean_d_end_m": mean_d,

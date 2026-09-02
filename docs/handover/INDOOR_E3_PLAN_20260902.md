@@ -131,5 +131,7 @@ bash experiments/aerial/scripts/run_e2i_e3_pose_step_audit.sh
 | 主航道 | F-cap（gt_proxy）仍 ✅ close |
 | 停做 | sim odom CE 兔洞；无人令 E3.2′ |
 | 重开条件（人令） | 开源 VIO 接 `vio_est`，或真机/部署传感轨 |
+| **孤立脚手架（2026-09-02）** | OpenVINS · **未**并入 E3-cap |
+| **VIO thrifty 归档** | [`INDOOR_VIO_THRIFTY_ARCHIVE_20260902.md`](INDOOR_VIO_THRIFTY_ARCHIVE_20260902.md) · sim S1/S2 签过 · 停追 ZOH · 重开=真机 |
 
 工件：`artifacts/indoor_e2i_e3_odom_east_velfix_050_summary_20260902_z18.json`

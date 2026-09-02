@@ -167,6 +167,7 @@ class OdomFromImuRgbPoseEstimator(PoseEstimator):
         self._origin_z = float(obs.position[2])
         self._prev_t = float(obs.t)
         self._v_hat = np.zeros(3, dtype=np.float64)
+        self._v_prev = np.asarray(getattr(obs, "velocity", np.zeros(3)), dtype=np.float64).reshape(3).copy()
         return self._make_estimate(obs, dt=0.0)
 
     def update(
@@ -176,16 +177,9 @@ class OdomFromImuRgbPoseEstimator(PoseEstimator):
         *,
         dt: float = 0.2,
     ) -> PoseEstimate:
-        # Prefer commanded control dt (1/step_hz). Wall-clock obs.t includes RPC /
-        # depth grab (~0.30–0.34 s @5 Hz indoor) and systematically over-integrates
-        # instantaneous velocity × inflated dt → cum drift on long episodes.
-        dt_cmd = float(dt) if float(dt) > 1e-4 else 0.2
-        dt_wall = float(obs.t) - self._prev_t
-        if 1e-4 < dt_wall <= 2.0:
-            # Cap wall to cmd·1.05 so rare stalls still advance, without 1.5× inflate.
-            dt_eff = min(dt_wall, dt_cmd * 1.05)
-        else:
-            dt_eff = dt_cmd
+        # Integrate on commanded control dt (1/step_hz). Wall-clock obs.t includes
+        # RPC/depth (~0.30–0.34 s) and must not scale velocity.
+        dt_eff = float(dt) if float(dt) > 1e-4 else 0.2
         act = np.zeros(4, dtype=np.float64) if action is None else np.asarray(action, dtype=np.float64).reshape(4)
 
         dyaw = _yaw_from_imu(obs.imu, dt_eff)
@@ -196,10 +190,16 @@ class OdomFromImuRgbPoseEstimator(PoseEstimator):
         self._psi_hat = math.atan2(math.sin(self._psi_hat), math.cos(self._psi_hat))
 
         vel = np.asarray(getattr(obs, "velocity", np.zeros(3)), dtype=np.float64).reshape(3)
+        v_prev = np.asarray(getattr(self, "_v_prev", vel), dtype=np.float64).reshape(3)
         if np.isfinite(vel).all() and float(np.linalg.norm(vel)) > 1e-5:
-            # Achieved world motion (sim state / fused odom), not commanded body delta.
-            self._p_hat[0] += vel[0] * dt_eff
-            self._p_hat[1] += vel[1] * dt_eff
+            # Trapezoid: end-of-step cruise × dt underestimates when decelerating
+            # into observe; average with pre-step velocity recovers Δp ≈ v̄·dt_cmd.
+            if np.isfinite(v_prev).all() and float(np.linalg.norm(v_prev)) > 1e-5:
+                v_int = 0.5 * (v_prev + vel)
+            else:
+                v_int = vel
+            self._p_hat[0] += float(v_int[0]) * dt_eff
+            self._p_hat[1] += float(v_int[1]) * dt_eff
         else:
             c = math.cos(psi_before)
             s = math.sin(psi_before)
@@ -212,7 +212,8 @@ class OdomFromImuRgbPoseEstimator(PoseEstimator):
         if alt_src in ("rangefinder", "rangefinder_stub"):
             self._p_hat[2] = alt
         elif np.isfinite(vel).all() and float(np.linalg.norm(vel)) > 1e-5:
-            self._p_hat[2] += vel[2] * dt_eff
+            v_z = float(0.5 * (v_prev[2] + vel[2])) if np.isfinite(v_prev).all() else float(vel[2])
+            self._p_hat[2] += v_z * dt_eff
         else:
             self._p_hat[2] += float(act[2])
 
@@ -224,6 +225,7 @@ class OdomFromImuRgbPoseEstimator(PoseEstimator):
             dx_w = c * act[0] - s * act[1]
             dy_w = s * act[0] + c * act[1]
             self._v_hat = np.array([dx_w, dy_w, float(act[2])], dtype=np.float64) / max(dt_eff, 1e-3)
+        self._v_prev = vel.copy() if np.isfinite(vel).all() else np.zeros(3, dtype=np.float64)
         self._prev_t = float(obs.t)
         return self._make_estimate(obs, dt=dt_eff, alt_src=alt_src)
 

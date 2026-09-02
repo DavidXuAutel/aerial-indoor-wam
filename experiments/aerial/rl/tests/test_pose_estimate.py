@@ -74,19 +74,37 @@ def test_odom_reset_anchors_spawn_world_coords():
     assert pe1.p_hat[0] == pytest.approx(-728.62)
 
 
-def test_odom_caps_wall_dt_to_commanded_step():
-    """RPC-inflated wall dt must not 1.5× over-integrate cruise velocity."""
+def test_odom_uses_commanded_dt_not_inflated_wall():
     obs0 = _obs(x=0.0, goal=[10.0, 0.0, 2.0])
     obs0.t = 0.0
     est = OdomFromImuRgbPoseEstimator()
     est.reset(obs0)
     obs1 = _obs(x=0.0, goal=[10.0, 0.0, 2.0])
-    obs1.t = 0.33  # wall ~1.65× slower than 5 Hz cmd
+    obs1.t = 0.33
     obs1.state[3:6] = [0.5, 0.0, 0.0]
     pe = est.update(obs1, action=np.zeros(4), dt=0.2)
-    # min(0.33, 0.2*1.05)=0.21 → 0.5*0.21=0.105; not 0.5*0.33=0.165
-    assert pe.p_hat[0] == pytest.approx(0.105, abs=1e-6)
-    assert pe.p_hat[0] < 0.15
+    # First step: no meaningful v_prev → vel×dt_cmd = 0.5*0.2
+    assert pe.p_hat[0] == pytest.approx(0.1, abs=1e-6)
+
+
+def test_odom_trapezoid_averages_pre_post_velocity():
+    obs0 = _obs(x=0.0, goal=[10.0, 0.0, 2.0])
+    obs0.t = 0.0
+    obs0.state[3:6] = [0.0, 0.0, 0.0]
+    est = OdomFromImuRgbPoseEstimator()
+    est.reset(obs0)
+    # Prime _v_prev via a cruise step
+    obs_a = _obs(x=0.0, goal=[10.0, 0.0, 2.0])
+    obs_a.t = 0.2
+    obs_a.state[3:6] = [0.5, 0.0, 0.0]
+    est.update(obs_a, action=np.zeros(4), dt=0.2)
+    # Decelerate: v_prev=0.5, v=0.1 → mean 0.3 × 0.2 = 0.06
+    obs_b = _obs(x=0.0, goal=[10.0, 0.0, 2.0])
+    obs_b.t = 0.4
+    obs_b.state[3:6] = [0.1, 0.0, 0.0]
+    pe = est.update(obs_b, action=np.zeros(4), dt=0.2)
+    # After first step p≈0.1, second +0.06 → 0.16
+    assert pe.p_hat[0] == pytest.approx(0.16, abs=1e-6)
 
 
 def test_gt_proxy_explicit_ok():

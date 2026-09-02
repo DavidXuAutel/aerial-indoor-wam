@@ -184,23 +184,39 @@ class OdomFromImuRgbPoseEstimator(PoseEstimator):
         dyaw = _yaw_from_imu(obs.imu, dt_eff)
         if dyaw is None:
             dyaw = float(act[3])
+        psi_before = float(self._psi_hat)
         self._psi_hat += dyaw
         self._psi_hat = math.atan2(math.sin(self._psi_hat), math.cos(self._psi_hat))
 
-        c = math.cos(self._psi_hat - dyaw)
-        s = math.sin(self._psi_hat - dyaw)
-        dx_w = c * act[0] - s * act[1]
-        dy_w = s * act[0] + c * act[1]
-        self._p_hat[0] += dx_w
-        self._p_hat[1] += dy_w
+        vel = np.asarray(getattr(obs, "velocity", np.zeros(3)), dtype=np.float64).reshape(3)
+        if np.isfinite(vel).all() and float(np.linalg.norm(vel)) > 1e-5:
+            # Achieved world motion (sim state / fused odom), not commanded body delta.
+            self._p_hat[0] += vel[0] * dt_eff
+            self._p_hat[1] += vel[1] * dt_eff
+        else:
+            c = math.cos(psi_before)
+            s = math.sin(psi_before)
+            dx_w = c * act[0] - s * act[1]
+            dy_w = s * act[0] + c * act[1]
+            self._p_hat[0] += dx_w
+            self._p_hat[1] += dy_w
 
         alt, alt_src = _altitude_from_obs(obs, origin_z=self._origin_z)
         if alt_src in ("rangefinder", "rangefinder_stub"):
             self._p_hat[2] = alt
+        elif np.isfinite(vel).all() and float(np.linalg.norm(vel)) > 1e-5:
+            self._p_hat[2] += vel[2] * dt_eff
         else:
             self._p_hat[2] += float(act[2])
 
-        self._v_hat = np.array([dx_w, dy_w, float(act[2])], dtype=np.float64) / max(dt_eff, 1e-3)
+        if np.isfinite(vel).all() and float(np.linalg.norm(vel)) > 1e-5:
+            self._v_hat = vel.copy()
+        else:
+            c = math.cos(psi_before)
+            s = math.sin(psi_before)
+            dx_w = c * act[0] - s * act[1]
+            dy_w = s * act[0] + c * act[1]
+            self._v_hat = np.array([dx_w, dy_w, float(act[2])], dtype=np.float64) / max(dt_eff, 1e-3)
         self._prev_t = float(obs.t)
         return self._make_estimate(obs, dt=dt_eff, alt_src=alt_src)
 

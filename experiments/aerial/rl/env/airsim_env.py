@@ -62,6 +62,11 @@ class AirSimEnvConfig:
     # the H100→4090 path. Health-check on reset still grabs depth once when
     # health_check=True. Set False for Plan-A rate smokes / RGB-first collection.
     grab_depth: bool = True
+    # Teleport spawn hygiene (Building_99 west @ yaw=π can embed ~10–20%).
+    spawn_retry_max: int = 3
+    spawn_min_z_m: float = 1.4
+    spawn_z_bump_m: float = 0.15
+    spawn_settle_s: float = 0.35
 
     @classmethod
     def from_env(cls, overrides: Optional[Dict[str, Any]] = None) -> "AirSimEnvConfig":
@@ -134,19 +139,31 @@ class AirSimDroneEnv:
         # Past this point control is armed; guarantee release on any failure so a
         # crashed reset never leaves the single-consumer renderer occupied.
         try:
-            # Episode positions are +up world; AirSim pose is NED, so negate z.
-            pose = airsim.Pose(
-                airsim.Vector3r(float(start[0]), float(start[1]), -float(start[2])),
-                airsim.to_quaternion(0.0, 0.0, float(yaw0)),
-            )
-            client.simSetVehiclePose(pose, True, **self._vk)
+            target_z = float(start[2])
+            z_try = target_z
+            max_tries = max(1, int(self.config.spawn_retry_max))
+            obs: Optional[Observation] = None
+            for attempt in range(max_tries):
+                # Episode positions are +up world; AirSim pose is NED, so negate z.
+                pose = airsim.Pose(
+                    airsim.Vector3r(float(start[0]), float(start[1]), -float(z_try)),
+                    airsim.to_quaternion(0.0, 0.0, float(yaw0)),
+                )
+                client.simSetVehiclePose(pose, True, **self._vk)
+                settle = float(self.config.spawn_settle_s)
+                if settle > 0:
+                    time.sleep(settle)
 
-            for _ in range(max(0, self.config.warmup_frames)):
-                self._grab_scene(client)
+                for _ in range(max(0, self.config.warmup_frames)):
+                    self._grab_scene(client)
 
-            # Force a depth frame on reset so health_check can run even when
-            # per-step grab_depth is False (rate-oriented collection).
-            obs = self.observe(force_depth=True)
+                obs = self.observe(force_depth=True)
+                if self._spawn_ok(obs, target_z):
+                    break
+                if attempt + 1 < max_tries:
+                    z_try += float(self.config.spawn_z_bump_m)
+
+            assert obs is not None
             if self.config.health_check:
                 self._assert_healthy(obs)
             return obs
@@ -217,6 +234,13 @@ class AirSimDroneEnv:
             t=time.perf_counter() - self._t0,
             info={"goal": None if self._goal is None else self._goal.tolist()},
         )
+
+    def _spawn_ok(self, obs: Observation, target_z: float) -> bool:
+        if bool(getattr(obs, "collided", False)):
+            return False
+        z = float(np.asarray(obs.position, dtype=np.float64).reshape(3)[2])
+        floor = min(float(self.config.spawn_min_z_m), float(target_z) - 0.08)
+        return z >= floor
 
     def observe_state(self) -> np.ndarray:
         client = self._connect()

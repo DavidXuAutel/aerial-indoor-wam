@@ -43,9 +43,22 @@ def test_odom_integrates_action_not_gt_position():
     est = OdomFromImuRgbPoseEstimator()
     est.reset(obs0)
     obs1 = _obs(x=99.0, goal=[10.0, 0.0, 2.0])
+    obs1.state[3:6] = [0.0, 0.0, 0.0]  # no velocity → action fallback
     pe = est.update(obs1, action=np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float64), dt=0.2)
     assert pe.p_hat[0] == pytest.approx(1.0)
     assert pe.p_hat[0] != pytest.approx(99.0)
+
+
+def test_odom_integrates_velocity_not_command_when_available():
+    obs0 = _obs(x=0.0, goal=[10.0, 0.0, 2.0])
+    est = OdomFromImuRgbPoseEstimator()
+    est.reset(obs0)
+    obs1 = _obs(x=0.0, goal=[10.0, 0.0, 2.0])
+    obs1.state[0] = 0.05
+    obs1.state[3:6] = [0.25, 0.0, 0.0]  # 0.25 m/s × 0.2 s = 0.05 m
+    pe = est.update(obs1, action=np.array([1.0, 0.0, 0.0, 0.0], dtype=np.float64), dt=0.2)
+    assert pe.p_hat[0] == pytest.approx(0.05)
+    assert pe.p_hat[0] != pytest.approx(1.0)
 
 
 def test_odom_reset_anchors_spawn_world_coords():

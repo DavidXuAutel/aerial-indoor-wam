@@ -55,6 +55,45 @@ def _set_pose(client, airsim, vehicle: str, xyz: np.ndarray, yaw: float) -> None
     time.sleep(0.4)
 
 
+def audit_start_reset(
+    env,
+    start: np.ndarray,
+    yaw0: float,
+    *,
+    nudge_forward: bool = False,
+) -> Dict[str, Any]:
+    """Reset via env (spawn retry) and optional forward micro-nudge."""
+    start = np.asarray(start, dtype=np.float64).reshape(3)
+    obs = env.reset({
+        "pos": [start.tolist(), start.tolist()],
+        "yaw": [float(yaw0), float(yaw0)],
+        "gpt_instruction": "clearance audit",
+    })
+    z = float(np.asarray(obs.position, dtype=np.float64).reshape(3)[2])
+    coll = bool(getattr(obs, "collided", False))
+    depth = getattr(obs, "depth", None)
+    dmin = _depth_min(depth)
+    nudge_coll = False
+    if nudge_forward and not coll:
+        obs, _ = env.step(np.array([0.12, 0.0, 0.0, 0.0], dtype=np.float64))
+        nudge_coll = bool(getattr(obs, "collided", False))
+        if not nudge_coll:
+            obs, _ = env.step(np.array([0.12, 0.0, 0.0, 0.0], dtype=np.float64))
+            nudge_coll = bool(getattr(obs, "collided", False))
+        d2 = getattr(obs, "depth", None)
+        if d2 is not None:
+            dmin2 = _depth_min(d2)
+            if dmin2 is not None and (dmin is None or dmin2 < dmin):
+                dmin = dmin2
+    return {
+        "depth_min_m": None if dmin is None else round(dmin, 3),
+        "collided": bool(coll or nudge_coll),
+        "spawn_collided": bool(coll),
+        "spawn_z_m": round(z, 3),
+        "nudge_collided": bool(nudge_coll),
+    }
+
+
 def audit_point(
     env,
     client,
@@ -125,6 +164,10 @@ def main() -> int:
         grab_depth=True,
         step_hz=5.0,
         health_check=False,
+        spawn_retry_max=3,
+        spawn_min_z_m=1.4,
+        spawn_z_bump_m=0.15,
+        spawn_settle_s=0.35,
     )
     env = AirSimDroneEnv(cfg)
     # warm reset
@@ -141,18 +184,18 @@ def main() -> int:
         yaw0, yawg = float(yaw[0]), float(yaw[-1])
         tid = r.get("trajectory_id", f"route_{i}")
 
-        start_rep = audit_point(
-            env, client, airsim, args.vehicle, start, yaw0, yaw_sweep=False, nudge_forward=True
-        )
+        start_rep = audit_start_reset(env, start, yaw0, nudge_forward=True)
         goal_rep = audit_point(env, client, airsim, args.vehicle, goal, yawg, yaw_sweep=True)
 
         start_ok = (not start_rep["collided"]) and (
             start_rep["depth_min_m"] is not None and start_rep["depth_min_m"] >= float(args.min_start_clearance_m)
-        )
+        ) and (start_rep.get("spawn_z_m") is None or start_rep["spawn_z_m"] >= float(start[2]) - 0.12)
         goal_ok = (not goal_rep["collided"]) and (
             goal_rep["depth_min_m"] is not None and goal_rep["depth_min_m"] >= float(args.min_goal_clearance_m)
         )
         drop_reasons = []
+        if start_rep.get("spawn_collided"):
+            drop_reasons.append("start_spawn_collided")
         if start_rep["collided"]:
             drop_reasons.append(
                 "start_collide_nudge" if start_rep.get("nudge_collided") else "start_collide"

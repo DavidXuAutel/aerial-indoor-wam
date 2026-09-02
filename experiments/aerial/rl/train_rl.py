@@ -111,6 +111,10 @@ def _build_env(env_cfg: Any) -> Any:
             step_hz=float(_get(env_cfg, "step_hz", 30.0)),
             health_check=bool(_get(env_cfg, "health_check", True)),
             grab_depth=bool(_get(env_cfg, "grab_depth", True)),
+            spawn_retry_max=int(_get(env_cfg, "spawn_retry_max", 3)),
+            spawn_min_z_m=float(_get(env_cfg, "spawn_min_z_m", 1.4)),
+            spawn_z_bump_m=float(_get(env_cfg, "spawn_z_bump_m", 0.15)),
+            spawn_settle_s=float(_get(env_cfg, "spawn_settle_s", 0.35)),
         ))
     raise ValueError(f"unknown env backend {backend!r} (expected mock|airsim)")
 

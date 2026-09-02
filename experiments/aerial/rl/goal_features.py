@@ -282,7 +282,7 @@ def stamp_train_pose_source(
                 pose_source=src,
                 altitude_source="gt_proxy" if src == "gt_proxy" else "baro",
             )
-            obs.info.update(pe.to_info_dict())
+            obs.info["pose_estimate"] = pe.to_info_dict()
             obs.info["pose_source"] = src
             obs.info.setdefault("goal_rel_pose_source", src)
 

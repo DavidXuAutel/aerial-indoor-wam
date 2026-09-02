@@ -1,0 +1,6 @@
+{
+  "protocol": "building99_clean_east_cap",
+  "source": "building99_indoor_short_routes_clean_sg.json",
+  "note": "F2-cap primary set: east_from_1 only; spawn excluded from gate denominator",
+  "n_out": 1
+}

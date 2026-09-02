@@ -323,6 +323,10 @@ def main() -> int:
     import os as _os
     cfg["env"]["camera"] = _os.environ.get("AIRSIM_CAMERA", cfg["env"].get("camera", "0"))
     cfg["env"]["vehicle"] = _os.environ.get("AIRSIM_VEHICLE", cfg["env"].get("vehicle", "drone_1"))
+    cfg["env"]["spawn_retry_max"] = int(cfg["env"].get("spawn_retry_max", 3))
+    cfg["env"]["spawn_min_z_m"] = float(cfg["env"].get("spawn_min_z_m", 1.4))
+    cfg["env"]["spawn_z_bump_m"] = float(cfg["env"].get("spawn_z_bump_m", 0.15))
+    cfg["env"]["spawn_settle_s"] = float(cfg["env"].get("spawn_settle_s", 0.35))
     if args.backend == "mock":
         cfg["env"]["host"] = "127.0.0.1"
     env = _build_env(cfg["env"])

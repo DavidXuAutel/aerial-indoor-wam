@@ -15,6 +15,7 @@
 | **2** | [`INDOOR_E2I_F_PLAN_20260901.md`](INDOOR_E2I_F_PLAN_20260901.md) | 合同：F-cap @0.50 |
 | **3** | [`INDOOR_E3_PLAN_20260902.md`](INDOOR_E3_PLAN_20260902.md) | **E3 全量 odom** |
 | **3b** | [`INDOOR_E3_125_PROMPT_20260902.md`](INDOOR_E3_125_PROMPT_20260902.md) | **125 同步 / spawn watch** |
+| **3c** | [`INDOOR_GAP_CONTINUATION_20260902.md`](INDOOR_GAP_CONTINUATION_20260902.md) | **12 致命缺口逐项续作** |
 | **4** | [`INDOOR_FULL_STACK_20260831.md`](INDOOR_FULL_STACK_20260831.md) | 方案/模型/接线快照 |
 | **5** | [`../../experiments/aerial/RUNBOOK_indoor_0xm.md`](../../experiments/aerial/RUNBOOK_indoor_0xm.md) | §8.10 |
 

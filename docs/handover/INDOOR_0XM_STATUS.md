@@ -4,7 +4,8 @@
 > **E3 结论**：管线 ✅ · post-FT G1 ❌ · velfix 审计 east **2/3 arr_hat** · formal east odom summary **deferred**（sim SPAWN hygiene，**非门**）  
 > **主门**：[`INDOOR_E2I_F_PLAN_20260901.md`](INDOOR_E2I_F_PLAN_20260901.md) §1.1 F-cap  
 > **干净集 east**：`building99_indoor_short_routes_clean_e.json`（125 可 `cp` 至 `artifacts/`）  
-> **125 handoff（归档）**：[`INDOOR_E3_125_PROMPT_20260902.md`](INDOOR_E3_125_PROMPT_20260902.md)
+> **125 handoff（归档）**：[`INDOOR_E3_125_PROMPT_20260902.md`](INDOOR_E3_125_PROMPT_20260902.md)  
+> **缺口续作**：[`INDOOR_GAP_CONTINUATION_20260902.md`](INDOOR_GAP_CONTINUATION_20260902.md)（12 项 · 产品 0/12）
 
 ## 一句话
 
@@ -22,6 +23,7 @@
 | **E3 velfix + E3.5 审计** | ✅ east drift 0.93→0.11 m · **2/3 arr_hat** |
 | **E3 formal odom east** | ⏸ **deferred** — sim east SPAWN（gt_proxy 探针亦首步撞）；**非门** |
 | spawn watch | ⏸ 可选后台（125）；**不阻塞 close**；绿了可补 summary |
+| **缺口续作序 2 F10** | ⏳ west/south hygiene 探针（125 · 不过门） |
 
 ## 收口（2026-09-02）
 

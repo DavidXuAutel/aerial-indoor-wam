@@ -26,6 +26,7 @@
 | **缺口续作序 6 F6** | ❌ F3 south cap **FAIL** — 3/3 SPAWN · spawn_rate=1.0 · **0 scored** |
 | **缺口续作序 7 F1** | ⚠️ 审计：E mix **fixture_frac=0.25**；F-collect 39ep **assist=none** |
 | **缺口续作序 9 F7** | ✅ stretch @0.20 nospawn — **arr 44%** · mean_d≈1.24 · **stretch 旁注** |
+| **spawn fix 验证** | ✅ east 3/3 arr · spawn_rate=0；south probe **spawn=false** · arrived @0.44 m |
 
 ## 收口（2026-09-02）
 
@@ -43,8 +44,6 @@
 
 ## Hygiene backlog（不过门）
 
-- **spawn fix 20260902**：teleport 后 **hold 零速** + XY nudge + Z bump；路由 z **1.5→1.6**；失败标 `spawn_failed`  
-- east：~11:05 起 intermittent SPAWN（gt/odom 同现）· watch 可选 · **待 fix 后复探**  
-- west：旧探针 policy step0 → `floorAtri_2`（z≈0.08 下沉）· **归因重力 settle，非纯 XY 进墙**  
-- south：旧 F3 3/3 SPAWN · **待 fix 后复探**  
+- **spawn fix 20260902** ✅：hold 零速 + XY nudge + z=1.6；125 复探 **east cap PASS · south 可飞**  
+- west：旧 floor 下沉归因已对上；可选再跑 west probe  
 - 动态人动线：部署 hold/换点；不进 F-cap

@@ -58,16 +58,11 @@ bash experiments/aerial/scripts/run_e2i_f_hygiene_west_probe.sh
 bash experiments/aerial/scripts/run_e2i_f_hygiene_south_spawn_probe.sh
 ```
 
-**过门（hygiene）**：探针 JSON 落盘 + STATUS §Hygiene 更新根因标签（spawn-embedded / ground / lateral / altitude）。
+**2026-09-02 结果（fix 前）**：探针 JSON 落盘；west policy step0 → floor；south SPAWN。
 
-**2026-09-02 结果**：
+**2026-09-02 spawn fix 后**：east `east_spawn_probe_postfix` — **spawn_rate=0 · 3/3 arr · cap PASS**；south probe — **spawn=false · arrived d≈0.44**。
 
-| 路由 | 工件 | 结论 |
-|------|------|------|
-| west | `artifacts/indoor_west_collision_probe_20260902.json` | physics 0/12 撞；policy step0 → **floorAtri_2**（z≈−0.53） |
-| south | `artifacts/indoor_south_spawn_probe_20260902.json` | **SPAWN** steps=1 collided |
-
-**过门（产品）**：full8 或 clean_sg **non-SPAWN spawn_rate < 10%** 稳定 3 天 — **未达**。
+**过门（产品）**：full8 或 clean_sg **non-SPAWN spawn_rate < 10%** 稳定 3 天 — **单日复探已绿，未做 3 日稳定性**。
 
 **禁止**：为压 spawn 无限改 sim / 擦路由当主门 blocker。
 

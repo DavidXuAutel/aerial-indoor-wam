@@ -52,6 +52,11 @@ def _audit_row(rep: Dict[str, Any], *, route_idx: int, seed: int) -> Dict[str, A
         "max_delta_err_m": audit.get("max_delta_err_m"),
         "final_cum_drift_m": audit.get("final_cum_drift_m"),
         "max_cum_drift_m": audit.get("max_cum_drift_m"),
+        "mean_under_hat_m": audit.get("mean_under_hat_m"),
+        "mean_under_vdt_m": audit.get("mean_under_vdt_m"),
+        "mean_scale_hat": audit.get("mean_scale_hat"),
+        "mean_dt_wall_s": audit.get("mean_dt_wall_s"),
+        "dt_cmd_s": audit.get("dt_cmd_s"),
         "d_gap_hat_minus_gt": (
             round(float(rep["d_end_m_hat"]) - float(rep["d_end_m_gt"]), 4)
             if rep.get("d_end_m_hat") is not None and rep.get("d_end_m_gt") is not None

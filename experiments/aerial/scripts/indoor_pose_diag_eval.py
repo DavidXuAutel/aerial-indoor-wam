@@ -89,6 +89,9 @@ def run_episode_with_audit(
 
     prev_p_gt = obs.position.copy()
     prev_p_hat = np.asarray(policy.pose_estimator._p_hat, dtype=np.float64).copy()
+    prev_t = float(getattr(obs, "t", 0.0))
+    step_hz = float(getattr(policy, "step_hz", 5.0) or 5.0)
+    dt_cmd = 1.0 / max(step_hz, 1e-3)
     step_audit: List[Dict[str, Any]] = []
 
     for step_i in range(max_steps):
@@ -117,6 +120,7 @@ def run_episode_with_audit(
             elif shield.should_override(obs, wm_out=wm_out):
                 action = clip_body_delta(shield.override_action(obs), action_limits)
 
+        vel_pre = np.asarray(getattr(obs, "velocity", np.zeros(3)), dtype=np.float64).reshape(3)
         next_obs, _info = env.step(action)
         next_obs.info["goal"] = goal_pos.tolist()
         policy.post_step(next_obs, action)
@@ -132,17 +136,42 @@ def run_episode_with_audit(
         p_hat = np.asarray(obs.info["pose_estimate"]["p_hat"], dtype=np.float64)
         d_p_gt = p_gt - prev_p_gt
         d_p_hat = p_hat - prev_p_hat
+        dt_wall = float(getattr(obs, "t", prev_t)) - prev_t
+        if dt_wall <= 1e-4 or dt_wall > 2.0:
+            dt_eff = dt_cmd
+        else:
+            dt_eff = dt_wall
+        vel_post = np.asarray(getattr(obs, "velocity", np.zeros(3)), dtype=np.float64).reshape(3)
+        # Estimator uses post-step velocity × dt_eff (see pose_estimate.update).
+        v_dt = vel_post * dt_eff
+        d_gt_n = float(np.linalg.norm(d_p_gt))
+        d_hat_n = float(np.linalg.norm(d_p_hat))
+        v_dt_n = float(np.linalg.norm(v_dt))
+        # Along-track: how much of GT step was captured by hat / by v*dt.
+        along_hat = float(np.dot(d_p_hat[:2], d_p_gt[:2]) / max(d_gt_n, 1e-6)) if d_gt_n > 1e-6 else 0.0
+        along_vdt = float(np.dot(v_dt[:2], d_p_gt[:2]) / max(d_gt_n, 1e-6)) if d_gt_n > 1e-6 else 0.0
         delta_err = float(np.linalg.norm(d_p_hat - d_p_gt))
         cum_drift = float(np.linalg.norm(p_hat - p_gt))
         step_audit.append({
             "step": step_i + 1,
             "delta_err_m": round(delta_err, 5),
             "cum_drift_m": round(cum_drift, 5),
-            "d_gt_m": round(float(np.linalg.norm(d_p_gt)), 5),
-            "d_hat_m": round(float(np.linalg.norm(d_p_hat)), 5),
+            "d_gt_m": round(d_gt_n, 5),
+            "d_hat_m": round(d_hat_n, 5),
+            "dt_wall_s": round(float(dt_wall), 5),
+            "dt_eff_s": round(float(dt_eff), 5),
+            "dt_cmd_s": round(float(dt_cmd), 5),
+            "v_post_norm": round(float(np.linalg.norm(vel_post)), 5),
+            "v_dt_m": round(v_dt_n, 5),
+            "along_hat_m": round(along_hat, 5),
+            "along_vdt_m": round(along_vdt, 5),
+            "under_hat_m": round(d_gt_n - along_hat, 5),
+            "under_vdt_m": round(d_gt_n - along_vdt, 5),
+            "scale_hat": round(d_hat_n / max(d_gt_n, 1e-6), 4) if d_gt_n > 1e-4 else None,
         })
         prev_p_gt = p_gt.copy()
         prev_p_hat = p_hat.copy()
+        prev_t = float(getattr(obs, "t", prev_t))
 
         if _goal_dist(obs.position, goal_pos) <= success_dist:
             break
@@ -158,6 +187,10 @@ def run_episode_with_audit(
 
     delta_errs = [s["delta_err_m"] for s in step_audit]
     cum_drifts = [s["cum_drift_m"] for s in step_audit]
+    under_hat = [s["under_hat_m"] for s in step_audit]
+    under_vdt = [s["under_vdt_m"] for s in step_audit]
+    scales = [s["scale_hat"] for s in step_audit if s.get("scale_hat") is not None]
+    dt_walls = [s["dt_wall_s"] for s in step_audit]
 
     return {
         "ok": True,
@@ -177,6 +210,11 @@ def run_episode_with_audit(
             "max_delta_err_m": round(float(np.max(delta_errs)), 5) if delta_errs else None,
             "final_cum_drift_m": round(float(cum_drifts[-1]), 5) if cum_drifts else None,
             "max_cum_drift_m": round(float(np.max(cum_drifts)), 5) if cum_drifts else None,
+            "mean_under_hat_m": round(float(np.mean(under_hat)), 5) if under_hat else None,
+            "mean_under_vdt_m": round(float(np.mean(under_vdt)), 5) if under_vdt else None,
+            "mean_scale_hat": round(float(np.mean(scales)), 4) if scales else None,
+            "mean_dt_wall_s": round(float(np.mean(dt_walls)), 5) if dt_walls else None,
+            "dt_cmd_s": round(float(dt_cmd), 5),
             "per_step": step_audit,
         },
         **mainline_report_fields(

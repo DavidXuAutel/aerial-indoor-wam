@@ -13,7 +13,7 @@
 | 3 | F2 | gt_proxy | E3 签 C · **VIO 探针脚手架** | ❌ | OpenVINS 孤立轨见 VIO PROBE 文档 |
 | 4 | F8 | E3 formal | 📦 签 C · G1 未过 | ❌ | **停追** sim hat |
 | 5 | F9 | E3 ckpt×velfix | 📦 随签 C 搁置 | ❌ | 人令 VIO 后再议 |
-| 6 | F6 | 单路由 | **south PASS z18** | ❌ | west 卫生已复探 |
+| 6 | F6 | 单路由 | **SE 联合 PASS z18** | ❌ | west 不进主门 |
 | 7 | F1 | 夹具训/none验 | ⚠️ 审计 | ❌ | fixture_frac=0.25 |
 | 8 | F3 | π 无罩近场 | 罩已修 | ❌ | 归档 shield-off |
 | 9 | F7 | @0.20 产品精度 | ✅ stretch 44% | ❌ | 旁注已报 |
@@ -132,6 +132,25 @@ STAMP=20260902_z18 TAG=f3_cap_050_south ROUTES=0 GATE_MODE=cap PROTOCOL=e2i_f3_c
 **过门（F3 south 探针）**：✅ **PASS**（gt_proxy）。产品扩路由仍待 west hygiene / 多路由合同。
 
 **禁止**：west 进主门分母（仅 hygiene 序 2）；gt_proxy south 冒充 E3。
+
+**2026-09-02_z18 south+east 联合 F-cap**：`artifacts/indoor_e2i_f_cap_050_se_summary_20260902_z18.json`
+
+```bash
+STAMP=20260902_z18 TAG=f_cap_050_se ROUTES=1,2 GATE_MODE=cap PROTOCOL=e2i_f_cap_se \
+  ANN=building99_indoor_short_routes_clean_sg.json \
+  bash experiments/aerial/scripts/run_e2i_f_eval_050.sh
+```
+
+| 指标 | 值 |
+|------|-----|
+| routes | 1,2 = south + east |
+| primary_gate_pass_cap | **true** |
+| arrived_scored | **6/6** |
+| mean_d_scored | ≈ **0.45 m** |
+| spawn_rate | **0** |
+| pose_source | gt_proxy |
+
+**过门（SE 联合探针）**：✅ **PASS**。west **仍不进**主门分母。
 
 ---
 

@@ -24,7 +24,7 @@
 | **E3 velfix + E3.5 审计** | ✅ east drift 0.93→0.11 m · 审计 **2/3 arr_hat** |
 | **E3 formal odom east** | 📦 **签 C 归档** — z18 双报：gt **3/3** · hat **1/3** · G1 未过 · **非传感完成** |
 | spawn watch | ⏸ 可选；**不阻塞**；不作为 E3 重开条件 |
-| **缺口续作序 6 F6** | ❌ F3 south cap **FAIL** — 3/3 SPAWN · spawn_rate=1.0 · **0 scored** |
+| **缺口续作序 6 F6** | ✅ F3 south cap **PASS**（z18）— 3/3 arr · spawn_rate=0 · mean_d≈0.47 · gt_proxy |
 | **缺口续作序 7 F1** | ⚠️ 审计：E mix **fixture_frac=0.25**；F-collect 39ep **assist=none** |
 | **缺口续作序 9 F7** | ✅ stretch @0.20 nospawn — **arr 44%** · mean_d≈1.24 · **stretch 旁注** |
 | **spawn fix 验证** | ✅ east 3/3 arr · spawn_rate=0；south probe **spawn=false** · arrived @0.44 m |

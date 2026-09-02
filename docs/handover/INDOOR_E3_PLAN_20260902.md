@@ -119,4 +119,4 @@ bash experiments/aerial/scripts/run_e2i_e3_pose_step_audit.sh
 | south drift | 1.20 m | 0.56 m |
 | south arr_hat | 0/3 | **2/3** |
 
-**待办**：`run_e2i_e3_east_spawn_watch.sh` **后台静默**（非 blocker）— east 能飞时补 formal summary；**不过门**。
+**收口（2026-09-02）**：formal east odom re-eval **deferred**（sim SPAWN hygiene，**非门**）。`run_e2i_e3_east_spawn_watch.sh` 在 125 **可选**后台 — 绿了补 `artifacts/indoor_e2i_e3_odom_east_sg_velfix_050_summary_*`；**不阻塞主航道 close**。E3.2′ 小 FT **仅人令**。

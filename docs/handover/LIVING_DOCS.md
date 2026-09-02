@@ -3,7 +3,7 @@
 > **用途**：回答「现在该读哪些活文档」。只列**仍在维护 / 决定现状**的入口；历史备忘与已闭合细节按需下钻。  
 > **防误读**：`RUNBOOK_v0.md` §8 晚¹⁹–²² / 任何「merge 从未 exit 0」叙述 = **2026-08-12 快照**，不是现状（V0 已于 08-14 merge PASS）。  
 > **2026-08-28**：本仓若在跑 **室内 0.xm** 轨，优先读下方 **A0**，勿把 GT-PD demo 成绩写进 V4/WAM 主线完成态。  
-> **2026-09-02**：室内 **F-cap** 主门改钉（east @0.50 · SPAWN 剔分母）；F1–F1e legacy 归档。见 STATUS + F PLAN §1.1。
+> **2026-09-02**：室内 **F-cap** 主门 ✅（east @0.50 · SPAWN 剔分母）；**E3 估器 velfix 已合入，formal odom east deferred**。见 STATUS + F PLAN §1.1 + E3 PLAN §10。
 
 ---
 
@@ -18,7 +18,7 @@
 | **4** | [`INDOOR_FULL_STACK_20260831.md`](INDOOR_FULL_STACK_20260831.md) | 方案/模型/接线快照 |
 | **5** | [`../../experiments/aerial/RUNBOOK_indoor_0xm.md`](../../experiments/aerial/RUNBOOK_indoor_0xm.md) | §8.10 |
 
-**现状一句话**：**F-cap = east_from_1**；SPAWN 旁注；west/south = hygiene；禁盲 FT。
+**现状一句话**：**F-cap = east_from_1 ✅**；E3 formal odom **deferred**；SPAWN 旁注；west/south = hygiene；禁盲 FT。
 
 **禁止**：关罩当完成态；夹具成绩当完成态；GT-PD 作默认飞行核；无人令开 E3；**用 legacy 全 ep G2 当完成态**；**为 spawn 无限擦 sim**。
 

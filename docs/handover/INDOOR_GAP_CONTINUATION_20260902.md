@@ -13,7 +13,7 @@
 | 3 | F2 | gt_proxy | E3 签 C | ❌ | 估器重开=VIO/真机 |
 | 4 | F8 | E3 formal | 📦 签 C · G1 未过 | ❌ | **停追** sim hat |
 | 5 | F9 | E3 ckpt×velfix | 📦 随签 C 搁置 | ❌ | 人令 VIO 后再议 |
-| 6 | F6 | 单路由 | east only | ❌ | **south 3/3 SPAWN** |
+| 6 | F6 | 单路由 | **south PASS z18** | ❌ | west hygiene / 产品扩 |
 | 7 | F1 | 夹具训/none验 | ⚠️ 审计 | ❌ | fixture_frac=0.25 |
 | 8 | F3 | π 无罩近场 | 罩已修 | ❌ | 归档 shield-off |
 | 9 | F7 | @0.20 产品精度 | ✅ stretch 44% | ❌ | 旁注已报 |
@@ -104,23 +104,32 @@ bash experiments/aerial/scripts/run_e2i_f_hygiene_south_spawn_probe.sh
 
 ---
 
-## 序 6 · F6 — 单路由 east
+## 序 6 · F6 — 单路由 east / south
 
-**缺口**：F-cap 仅 east_from_1；west/south 未扩。
-
-**继续**（125 · 可选 F3）：
+**缺口**：F-cap 原仅 east_from_1；需扩 south（west 仅 hygiene）。
 
 ```bash
-STAMP=20260902 TAG=f3_cap_050_south ROUTES=0 GATE_MODE=cap PROTOCOL=e2i_f3_cap_south \
-  ANN=artifacts/building99_indoor_short_routes_clean_se.json \
+STAMP=20260902_z18 TAG=f3_cap_050_south ROUTES=0 GATE_MODE=cap PROTOCOL=e2i_f3_cap_south \
+  ANN=building99_indoor_short_routes_clean_se.json \
   bash experiments/aerial/scripts/run_e2i_f_eval_050.sh
 ```
 
-**2026-09-02 结果**：`artifacts/indoor_e2i_f3_cap_050_south_summary_20260902.json` — **primary_gate_pass_cap=false** · 3/3 **SPAWN** · n_scored=0 · spawn_rate=1.0。
+**2026-09-02（fix 前）**：`..._summary_20260902.json` — **FAIL** · 3/3 SPAWN · n_scored=0。
 
-**过门**：south 单路由 F-cap PASS（3/3 non-SPAWN 时可判）— **未达**。
+**2026-09-02_z18（spawn fix 后重跑）**：`artifacts/indoor_e2i_f3_cap_050_south_summary_20260902_z18.json`
 
-**禁止**：west 进主门分母（仅 hygiene 序 2）。
+| 指标 | 值 |
+|------|-----|
+| primary_gate_pass_cap | **true** |
+| G1–G4 | ✅ |
+| arrived_scored | **3/3** · rate **1.0** |
+| mean_d_scored | ≈ **0.47 m** |
+| spawn_rate | **0** |
+| pose_source | gt_proxy（探针 · 非 E3） |
+
+**过门（F3 south 探针）**：✅ **PASS**（gt_proxy）。产品扩路由仍待 west hygiene / 多路由合同。
+
+**禁止**：west 进主门分母（仅 hygiene 序 2）；gt_proxy south 冒充 E3。
 
 ---
 
@@ -135,7 +144,7 @@ STAMP=20260902 TAG=f3_cap_050_south ROUTES=0 GATE_MODE=cap PROTOCOL=e2i_f3_cap_s
 | 7.1 | ✅ E 头 `dataset_indoor_e2i_e_20260901`：`e2i_e_mix` · **fixture_frac=0.25** |
 | 7.2 | ✅ F-collect east 39 NPZ：manifest **`assist=none`** · gt_proxy · drop_collided |
 | 7.3 | E3 集 60 NPZ：**assist=none** · train/eval=odom |
-| 7.4 | south F3 不过 → **暂不扩 south collect** |
+| 7.4 | ✅ south F3 z18 **PASS** → 可议 south collect（人令） |
 
 **过门（产品）**：下轮 FT **B1/none ≥70%** 主料；B2 夹具 **≤25%** — E 头 **0.25 边界合规**，但 **F1 结构性残留未消**（mix 仍含夹具）。
 

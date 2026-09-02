@@ -97,11 +97,11 @@ STAMP=20260902_z18 bash experiments/aerial/scripts/run_e2i_e3_east_velfix_eval.s
 | G2/G3 | ✅ |
 | 工件 | `artifacts/indoor_e2i_e3_odom_east_velfix_050_summary_20260902_z18.json` |
 
-**逐步审计 `*_z18_vdt`**：east mean Δerr≈0.02 m/步但 cum drift 可达 **0.9 m**；`dt_wall≈0.30–0.34 s` vs `dt_cmd=0.2 s` → **墙钟×瞬时 v 过积分**；`under_hat≈under_vdt`（积分路径= v·dt）。
+**逐步审计 `*_z18_vdt`**：east mean Δerr≈0.02 m/步；长航迹 cum drift 可达 **0.9 m**；`dt_wall≈0.33 s` vs `dt_cmd=0.2`；`under_hat≈under_vdt≈+4 mm/步` 沿迹欠积分（×N 步 ≈ gap）。
 
-**修**：`pose_estimate` 用 `dt_eff=min(dt_wall, dt_cmd·1.05)`（见后续 commit）。
+**试修**：`dt_cmd` 封顶 / 梯形速度 → formal **更差**（0/3 hat，gap≈0.5–0.9）→ **已回退** wall-dt velfix（z18 仍最佳：1/3 hat）。
 
-**过门**：F-cap 同 G1–G4，判据 **`arrived_hat`** — formal z18 **未过**；dt-cap 后须重跑 formal。
+**下一刀候选（人令）**：① 沿迹 scale 标定；② stop_on hat 双报；③ E3.2′ 小 FT 适应 CE。
 ---
 
 ## 序 5 · F9 — E3 ckpt × velfix 未对齐

@@ -74,6 +74,21 @@ def test_odom_reset_anchors_spawn_world_coords():
     assert pe1.p_hat[0] == pytest.approx(-728.62)
 
 
+def test_odom_caps_wall_dt_to_commanded_step():
+    """RPC-inflated wall dt must not 1.5× over-integrate cruise velocity."""
+    obs0 = _obs(x=0.0, goal=[10.0, 0.0, 2.0])
+    obs0.t = 0.0
+    est = OdomFromImuRgbPoseEstimator()
+    est.reset(obs0)
+    obs1 = _obs(x=0.0, goal=[10.0, 0.0, 2.0])
+    obs1.t = 0.33  # wall ~1.65× slower than 5 Hz cmd
+    obs1.state[3:6] = [0.5, 0.0, 0.0]
+    pe = est.update(obs1, action=np.zeros(4), dt=0.2)
+    # min(0.33, 0.2*1.05)=0.21 → 0.5*0.21=0.105; not 0.5*0.33=0.165
+    assert pe.p_hat[0] == pytest.approx(0.105, abs=1e-6)
+    assert pe.p_hat[0] < 0.15
+
+
 def test_gt_proxy_explicit_ok():
     obs = _obs(goal=[10.0, 0.0, 2.0])
     pe = GtProxyPoseEstimator().reset(obs)

@@ -97,9 +97,11 @@ STAMP=20260902_z18 bash experiments/aerial/scripts/run_e2i_e3_east_velfix_eval.s
 | G2/G3 | ✅ |
 | 工件 | `artifacts/indoor_e2i_e3_odom_east_velfix_050_summary_20260902_z18.json` |
 
-**过门**：F-cap 同 G1–G4，判据 **`arrived_hat`** — **未过**（π 真到点，hat 判未到）。
+**逐步审计 `*_z18_vdt`**：east mean Δerr≈0.02 m/步但 cum drift 可达 **0.9 m**；`dt_wall≈0.30–0.34 s` vs `dt_cmd=0.2 s` → **墙钟×瞬时 v 过积分**；`under_hat≈under_vdt`（积分路径= v·dt）。
 
-**下一步**：序 5 — 人令 E3.2′ 小 FT，或接受探针水位、暂不主张 E3 传感完成。
+**修**：`pose_estimate` 用 `dt_eff=min(dt_wall, dt_cmd·1.05)`（见后续 commit）。
+
+**过门**：F-cap 同 G1–G4，判据 **`arrived_hat`** — formal z18 **未过**；dt-cap 后须重跑 formal。
 ---
 
 ## 序 5 · F9 — E3 ckpt × velfix 未对齐

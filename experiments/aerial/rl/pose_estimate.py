@@ -176,9 +176,16 @@ class OdomFromImuRgbPoseEstimator(PoseEstimator):
         *,
         dt: float = 0.2,
     ) -> PoseEstimate:
-        dt_eff = float(obs.t) - self._prev_t
-        if dt_eff <= 1e-4 or dt_eff > 2.0:
-            dt_eff = float(dt)
+        # Prefer commanded control dt (1/step_hz). Wall-clock obs.t includes RPC /
+        # depth grab (~0.30–0.34 s @5 Hz indoor) and systematically over-integrates
+        # instantaneous velocity × inflated dt → cum drift on long episodes.
+        dt_cmd = float(dt) if float(dt) > 1e-4 else 0.2
+        dt_wall = float(obs.t) - self._prev_t
+        if 1e-4 < dt_wall <= 2.0:
+            # Cap wall to cmd·1.05 so rare stalls still advance, without 1.5× inflate.
+            dt_eff = min(dt_wall, dt_cmd * 1.05)
+        else:
+            dt_eff = dt_cmd
         act = np.zeros(4, dtype=np.float64) if action is None else np.asarray(action, dtype=np.float64).reshape(4)
 
         dyaw = _yaw_from_imu(obs.imu, dt_eff)

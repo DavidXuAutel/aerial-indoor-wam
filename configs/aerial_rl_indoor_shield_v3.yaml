@@ -14,13 +14,16 @@ env:
   grab_depth: true
   health_check: false
   seed: 0
-  # Spawn hygiene: hold velocity after teleport; XY nudge + Z bump on embed.
+  # Explicit birth altitude (Building_99 lobby):
+  # commanded_z = max(annotation_z + spawn_z_raise_m, spawn_z_floor_cmd_m)
   spawn_retry_max: 6
   spawn_min_z_m: 1.4
   spawn_z_bump_m: 0.15
   spawn_settle_s: 0.50
   spawn_hold: true
   spawn_xy_nudge_m: 0.30
+  spawn_z_raise_m: 0.0
+  spawn_z_floor_cmd_m: 1.8
 
 reward:
   w_progress: 1.0

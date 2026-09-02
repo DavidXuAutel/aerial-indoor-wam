@@ -1,6 +1,8 @@
 {
   "protocol": "building99_clean_east_cap",
   "source": "building99_indoor_short_routes_clean_sg.json",
-  "note": "F2-cap primary set: east_from_1 only; spawn excluded from gate denominator",
-  "n_out": 1
+  "note": "F2-cap east; birth z=1.8 m (explicit floor)",
+  "n_out": 1,
+  "spawn_z_m": 1.8,
+  "spawn_z_policy": "annotation z=1.8; env spawn_z_floor_cmd_m=1.8"
 }

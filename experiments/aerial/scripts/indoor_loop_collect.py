@@ -329,6 +329,8 @@ def main() -> int:
     cfg["env"]["spawn_settle_s"] = float(cfg["env"].get("spawn_settle_s", 0.50))
     cfg["env"]["spawn_hold"] = bool(cfg["env"].get("spawn_hold", True))
     cfg["env"]["spawn_xy_nudge_m"] = float(cfg["env"].get("spawn_xy_nudge_m", 0.30))
+    cfg["env"]["spawn_z_raise_m"] = float(cfg["env"].get("spawn_z_raise_m", 0.0))
+    cfg["env"]["spawn_z_floor_cmd_m"] = float(cfg["env"].get("spawn_z_floor_cmd_m", 1.8))
     if args.backend == "mock":
         cfg["env"]["host"] = "127.0.0.1"
     env = _build_env(cfg["env"])

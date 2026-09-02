@@ -5,5 +5,8 @@
   "min_goal_clearance_m": 1.0,
   "n_in": 8,
   "n_out": 3,
-  "report": "/home/yao/aerial-indoor-wam/artifacts/building99_route_clearance_audit_20260901.json"
+  "report": "/home/yao/aerial-indoor-wam/artifacts/building99_route_clearance_audit_20260901.json",
+  "spawn_z_m": 1.8,
+  "spawn_z_policy": "annotation z=1.8; env spawn_z_floor_cmd_m=1.8",
+  "note": "clean_sg west/south/east; birth z=1.8 m (explicit floor)"
 }

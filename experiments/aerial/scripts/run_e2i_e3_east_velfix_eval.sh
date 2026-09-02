@@ -46,6 +46,8 @@ env["spawn_z_bump_m"] = 0.15
 env["spawn_settle_s"] = 0.50
 env["spawn_hold"] = True
 env["spawn_xy_nudge_m"] = 0.30
+env["spawn_z_raise_m"] = 0.0
+env["spawn_z_floor_cmd_m"] = 1.8
 cfg.setdefault("reward", {})["success_dist_m"] = 0.50
 Path("$TMP").write_text(yaml.safe_dump(cfg, sort_keys=False))
 PY

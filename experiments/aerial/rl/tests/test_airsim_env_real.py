@@ -143,6 +143,67 @@ def test_spawn_hold_issues_zero_velocity_during_settle():
     assert client.velocity_cmds[0][:3] == (0.0, 0.0, 0.0)
 
 
+def test_spawn_floor_cmd_raises_annotation_z_explicitly():
+    """Annotation z=1.5 must teleport at spawn_z_floor_cmd_m=1.8."""
+    e, client = _make_env(
+        health_check=False,
+        warmup_frames=0,
+        spawn_settle_s=0.0,
+        spawn_z_raise_m=0.0,
+        spawn_z_floor_cmd_m=1.8,
+        spawn_min_z_m=1.4,
+    )
+    e._grab_scene = lambda client: np.zeros((8, 8, 3), dtype=np.uint8)
+    e._grab_depth = lambda client: None
+    e._grab_imu = lambda client: {}
+    e._grab_collision = lambda client: False
+
+    def _observe(force_depth=False):
+        from experiments.aerial.rl.env.obs import Observation
+        return Observation(
+            rgb=np.zeros((8, 8, 3), dtype=np.uint8),
+            state=np.array([1.0, 0.0, 1.8, 0, 0, 0, 0], dtype=np.float32),
+            collided=False,
+            info={},
+        )
+
+    e.observe = _observe  # type: ignore[method-assign]
+    obs = e.reset({"pos": [[1.0, 0.0, 1.5], [4.0, 0.0, 1.5]], "yaw": [0.0, 0.0]})
+    assert client.set_poses[0].position.z_val == pytest.approx(-1.8)
+    assert obs.info.get("spawn_ann_z_m") == pytest.approx(1.5)
+    assert obs.info.get("spawn_z_floor_cmd_m") == pytest.approx(1.8)
+    assert obs.info.get("spawn_z_m") == pytest.approx(1.8)
+
+
+def test_spawn_z_raise_adds_on_top_of_annotation():
+    e, client = _make_env(
+        health_check=False,
+        warmup_frames=0,
+        spawn_settle_s=0.0,
+        spawn_z_raise_m=0.3,
+        spawn_z_floor_cmd_m=1.5,
+        spawn_min_z_m=1.4,
+    )
+    e._grab_scene = lambda client: np.zeros((8, 8, 3), dtype=np.uint8)
+    e._grab_depth = lambda client: None
+    e._grab_imu = lambda client: {}
+    e._grab_collision = lambda client: False
+
+    def _observe(force_depth=False):
+        from experiments.aerial.rl.env.obs import Observation
+        return Observation(
+            rgb=np.zeros((8, 8, 3), dtype=np.uint8),
+            state=np.array([1.0, 0.0, 1.8, 0, 0, 0, 0], dtype=np.float32),
+            collided=False,
+            info={},
+        )
+
+    e.observe = _observe  # type: ignore[method-assign]
+    e.reset({"pos": [[1.0, 0.0, 1.5], [4.0, 0.0, 1.5]], "yaw": [0.0, 0.0]})
+    # max(1.5+0.3, 1.5) = 1.8
+    assert client.set_poses[0].position.z_val == pytest.approx(-1.8)
+
+
 def test_spawn_retries_xy_nudge_when_first_pose_sunk():
     """First observe reports floor sink (z≈0); later attempt with XY offset OK."""
     e, client = _make_env(

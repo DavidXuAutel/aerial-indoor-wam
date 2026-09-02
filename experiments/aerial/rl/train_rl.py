@@ -117,6 +117,8 @@ def _build_env(env_cfg: Any) -> Any:
             spawn_settle_s=float(_get(env_cfg, "spawn_settle_s", 0.50)),
             spawn_hold=bool(_get(env_cfg, "spawn_hold", True)),
             spawn_xy_nudge_m=float(_get(env_cfg, "spawn_xy_nudge_m", 0.30)),
+            spawn_z_raise_m=float(_get(env_cfg, "spawn_z_raise_m", 0.0)),
+            spawn_z_floor_cmd_m=float(_get(env_cfg, "spawn_z_floor_cmd_m", 1.8)),
         ))
     raise ValueError(f"unknown env backend {backend!r} (expected mock|airsim)")
 

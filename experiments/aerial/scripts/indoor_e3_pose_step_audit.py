@@ -150,6 +150,8 @@ def main() -> int:
         env_cfg["spawn_settle_s"] = 0.50
         env_cfg["spawn_hold"] = True
         env_cfg["spawn_xy_nudge_m"] = 0.30
+        env_cfg["spawn_z_raise_m"] = 0.0
+        env_cfg["spawn_z_floor_cmd_m"] = 1.8
         import os as _os
         env_cfg["camera"] = _os.environ.get("AIRSIM_CAMERA", env_cfg.get("camera", "0"))
         env_cfg["vehicle"] = _os.environ.get("AIRSIM_VEHICLE", env_cfg.get("vehicle", "drone_1"))

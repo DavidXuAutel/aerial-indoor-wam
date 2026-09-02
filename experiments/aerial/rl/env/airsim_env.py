@@ -71,6 +71,11 @@ class AirSimEnvConfig:
     spawn_hold: bool = True
     # Lateral offsets (m) cycled with Z bumps when the nominal start embeds.
     spawn_xy_nudge_m: float = 0.30
+    # Explicit birth-altitude policy (Building_99 lobby):
+    # commanded_z = max(annotation_z + spawn_z_raise_m, spawn_z_floor_cmd_m).
+    # Keep this visible in yaml — do not rely on silent 1.5 m defaults.
+    spawn_z_raise_m: float = 0.0
+    spawn_z_floor_cmd_m: float = 1.8
 
     @classmethod
     def from_env(cls, overrides: Optional[Dict[str, Any]] = None) -> "AirSimEnvConfig":
@@ -143,7 +148,12 @@ class AirSimDroneEnv:
         # Past this point control is armed; guarantee release on any failure so a
         # crashed reset never leaves the single-consumer renderer occupied.
         try:
-            target_z = float(start[2])
+            # Explicit birth height: raise annotation start, then clamp to floor.
+            ann_z = float(start[2])
+            raise_m = float(self.config.spawn_z_raise_m)
+            floor_cmd = float(self.config.spawn_z_floor_cmd_m)
+            target_z = max(ann_z + raise_m, floor_cmd)
+            start[2] = target_z
             max_tries = max(1, int(self.config.spawn_retry_max))
             xy_offsets = self._spawn_xy_offsets()
             obs: Optional[Observation] = None
@@ -171,6 +181,9 @@ class AirSimDroneEnv:
                     obs.info["spawn_attempt"] = int(attempt)
                     obs.info["spawn_offset_xy_m"] = [float(ox), float(oy)]
                     obs.info["spawn_z_m"] = float(z_try)
+                    obs.info["spawn_ann_z_m"] = float(ann_z)
+                    obs.info["spawn_z_raise_m"] = float(raise_m)
+                    obs.info["spawn_z_floor_cmd_m"] = float(floor_cmd)
                     break
 
             assert obs is not None

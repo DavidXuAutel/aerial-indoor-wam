@@ -170,6 +170,8 @@ def main() -> int:
         spawn_settle_s=0.50,
         spawn_hold=True,
         spawn_xy_nudge_m=0.30,
+        spawn_z_raise_m=0.0,
+        spawn_z_floor_cmd_m=1.8,
     )
     env = AirSimDroneEnv(cfg)
     # warm reset

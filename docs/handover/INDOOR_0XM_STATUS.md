@@ -44,6 +44,6 @@
 
 ## Hygiene backlog（不过门）
 
-- **spawn fix 20260902** ✅：hold 零速 + XY nudge + z=1.6；125 复探 **east cap PASS · south 可飞**  
+- **spawn fix 20260902** ✅：hold + XY nudge；**显式出生高度** `spawn_z_floor_cmd_m=1.8` + 注解 z=1.8  
 - west：旧 floor 下沉归因已对上；可选再跑 west probe  
 - 动态人动线：部署 hold/换点；不进 F-cap

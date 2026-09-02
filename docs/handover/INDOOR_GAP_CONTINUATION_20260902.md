@@ -1,8 +1,8 @@
 # Indoor WAM — 致命缺口逐项续作（2026-09-02）
 
-> **前置**：F-cap ✅ · E3 velfix ✅ · formal odom **deferred**  
+> **前置**：F-cap ✅ · E3 签 C · **Stick 主航道 CLOSED** → [`INDOOR_STICK_CLOSE_20260902.md`](INDOOR_STICK_CLOSE_20260902.md)  
 > **权威**：[`INDOOR_FATAL_DEFECTS_20260831.md`](INDOOR_FATAL_DEFECTS_20260831.md) · [`INDOOR_0XM_STATUS.md`](INDOOR_0XM_STATUS.md)  
-> **用法**：按 **序#** 逐项推进；**不过门**项标 hygiene；产品结案须 **12/12 产品列** 全绿（当前 **0/12**）。
+> **用法**：本表保留产品 0/12 诚实账；**默认下一刀已迁出** → `aerial-vgoal-wam` 语义导航。
 
 ## 总览
 

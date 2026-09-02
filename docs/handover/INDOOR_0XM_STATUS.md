@@ -1,18 +1,15 @@
 # Indoor WAM — STATUS（主航道）
 
-> **更新**：2026-09-02（F-cap ✅ · **E3 仿真 hat 签 C 归档** · spawn z=1.8 · **开源 VIO 孤立探针脚手架**）  
-> **E3（签 C）**：formal z18 **双报** spawn=0 · **3/3 gt** · **1/3 hat** · G1 **未过**；**停追** sim odom CE / 盲 FT；估器重开 = **开源 VIO 或真机**（人令）  
-> **VIO 孤立轨**：[`INDOOR_VIO_OPENSOURCE_PROBE_20260902.md`](INDOOR_VIO_OPENSOURCE_PROBE_20260902.md)（OpenVINS · **不**占 AirSim / **不**改 F-cap 默认）  
-> **125 VIO prompt**：[`INDOOR_VIO_125_PROMPT_20260902.md`](INDOOR_VIO_125_PROMPT_20260902.md)（空闲机编译 + P0/P1；**勿**打断在跑 job）  
-> **主门**：[`INDOOR_E2I_F_PLAN_20260901.md`](INDOOR_E2I_F_PLAN_20260901.md) §1.1 F-cap  
-> **干净集 east**：`building99_indoor_short_routes_clean_e.json`（z=1.8 · `spawn_z_floor_cmd_m=1.8`）  
-> **125 handoff（归档）**：[`INDOOR_E3_125_PROMPT_20260902.md`](INDOOR_E3_125_PROMPT_20260902.md)  
-> **E3 计划**：[`INDOOR_E3_PLAN_20260902.md`](INDOOR_E3_PLAN_20260902.md) §11 签 C  
-> **缺口续作**：[`INDOOR_GAP_CONTINUATION_20260902.md`](INDOOR_GAP_CONTINUATION_20260902.md)（12 项 · 产品 0/12）
+> **更新**：2026-09-02 · **Stick 主航道 CLOSED**  
+> **关闭声明**：[`INDOOR_STICK_CLOSE_20260902.md`](INDOOR_STICK_CLOSE_20260902.md)  
+> **下一项目**：[`aerial-vgoal-wam`](../../../aerial-vgoal-wam/) 室内语义导航 · [`2026-09-02-indoor-semantic-nav-design.md`](../../../aerial-vgoal-wam/docs/superpowers/specs/2026-09-02-indoor-semantic-nav-design.md)  
+> **E3（签 C）**：z18 双报 gt 3/3 · hat 1/3 · G1 未过 · **停追** sim odom  
+> **主门（已过）**：F-cap east @0.50 · gt_proxy · [`INDOOR_E2I_F_PLAN_20260901.md`](INDOOR_E2I_F_PLAN_20260901.md) §1.1  
+> **缺口表**：[`INDOOR_GAP_CONTINUATION_20260902.md`](INDOOR_GAP_CONTINUATION_20260902.md)（产品仍 0/12 · **不再作为本仓默认下一刀**）
 
 ## 一句话
 
-**主完成态 = F-cap**：east_from_1 @0.50 · gt_proxy 探针 · **non-SPAWN ep 过 G1–G4**。SPAWN **旁注不过门**。**E3 传感完成态 = 未宣称**：仿真 `arrived_hat` G1 未过且 **签 C 停追**；报表 **强制双报 gt/hat**，禁止用 gt 冒充 E3。
+**Stick 室内主航道 close**：F-cap ✅ · spawn/SE 探针 ✅ · E3 签 C 归档。**不**写产品结案。后续语义搜+飞 → **`aerial-vgoal-wam`**（另立项目）。
 
 ## 勾选
 

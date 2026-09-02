@@ -23,7 +23,9 @@
 | **E3 velfix + E3.5 审计** | ✅ east drift 0.93→0.11 m · **2/3 arr_hat** |
 | **E3 formal odom east** | ⏸ **deferred** — sim east SPAWN（gt_proxy 探针亦首步撞）；**非门** |
 | spawn watch | ⏸ 可选后台（125）；**不阻塞 close**；绿了可补 summary |
-| **缺口续作序 2 F10** | ✅ west/south 探针已跑 · 工件 `artifacts/indoor_*_probe_20260902.json` |
+| **缺口续作序 6 F6** | ❌ F3 south cap **FAIL** — 3/3 SPAWN · spawn_rate=1.0 · **0 scored** |
+| **缺口续作序 7 F1** | ⚠️ 审计：E mix **fixture_frac=0.25**；F-collect 39ep **assist=none** |
+| **缺口续作序 9 F7** | ⏳ stretch @0.20 nospawn（125 跑数中） |
 
 ## 收口（2026-09-02）
 
@@ -43,5 +45,5 @@
 
 - east：~11:05 起 intermittent SPAWN（gt/odom 同现）· watch 可选  
 - west：**F10 探针 20260902** — physics sweep 0/12 撞；**policy step 0 → `floorAtri_2`**（z≈−0.53，贴地/高度）  
-- south：**F10 探针 20260902** — route 1 **SPAWN** steps=1 collided（与 F1d 一致）  
+- south：**F10** SPAWN steps=1；**F3 cap 20260902** 3/3 SPAWN · **不可扩主门**  
 - 动态人动线：部署 hold/换点；不进 F-cap

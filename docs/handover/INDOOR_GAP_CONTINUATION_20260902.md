@@ -132,13 +132,14 @@ bash experiments/aerial/scripts/run_e2i_e3_odom_eval.sh
 **继续**（125 · 可选 F3）：
 
 ```bash
-# south @0.50 · gt_proxy · cap 门（non-SPAWN 分母）
-ANN=artifacts/building99_indoor_short_routes_clean_se.json \
-  TAG=f3_cap_050_south ROUTES=0 GATE_MODE=cap \
+STAMP=20260902 TAG=f3_cap_050_south ROUTES=0 GATE_MODE=cap PROTOCOL=e2i_f3_cap_south \
+  ANN=artifacts/building99_indoor_short_routes_clean_se.json \
   bash experiments/aerial/scripts/run_e2i_f_eval_050.sh
 ```
 
-**过门**：south 单路由 F-cap PASS（3/3 non-SPAWN 时可判）。
+**2026-09-02 结果**：`artifacts/indoor_e2i_f3_cap_050_south_summary_20260902.json` — **primary_gate_pass_cap=false** · 3/3 **SPAWN** · n_scored=0 · spawn_rate=1.0。
+
+**过门**：south 单路由 F-cap PASS（3/3 non-SPAWN 时可判）— **未达**。
 
 **禁止**：west 进主门分母（仅 hygiene 序 2）。
 
@@ -152,11 +153,12 @@ ANN=artifacts/building99_indoor_short_routes_clean_se.json \
 
 | 步 | 动作 |
 |----|------|
-| 7.1 | 审计 E 头 FT mix：夹具占比、assist 标签（已有 ckpt manifest） |
-| 7.2 | F-collect east 39 NPZ：确认 **`assist=none` 100%** |
-| 7.3 | 若 south F3 过 → south collect @0.50 none（**禁** gt_pd 主料） |
+| 7.1 | ✅ E 头 `dataset_indoor_e2i_e_20260901`：`e2i_e_mix` · **fixture_frac=0.25** |
+| 7.2 | ✅ F-collect east 39 NPZ：manifest **`assist=none`** · gt_proxy · drop_collided |
+| 7.3 | E3 集 60 NPZ：**assist=none** · train/eval=odom |
+| 7.4 | south F3 不过 → **暂不扩 south collect** |
 
-**过门（产品）**：下轮 FT **B1/none ≥70%** 主料；B2 夹具 **≤25%**；完成态仍 none 验。
+**过门（产品）**：下轮 FT **B1/none ≥70%** 主料；B2 夹具 **≤25%** — E 头 **0.25 边界合规**，但 **F1 结构性残留未消**（mix 仍含夹具）。
 
 ---
 

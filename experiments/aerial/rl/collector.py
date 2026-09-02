@@ -65,7 +65,12 @@ def act_delta(
         else obs.policy_view(goal=goal)
     )
     if callable(act):
-        raw = act(view)
+        # Visual-goal policies need dense depth on the Observation to back-project
+        # YOLO boxes; policy_view deliberately strips depth for π training.
+        if bool(getattr(policy, "use_full_obs", False)):
+            raw = act(obs)
+        else:
+            raw = act(view)
     else:
         predict_delta = getattr(policy, "predict_delta", None)
         if callable(predict_delta):

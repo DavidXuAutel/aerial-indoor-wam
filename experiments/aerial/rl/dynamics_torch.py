@@ -967,6 +967,7 @@ class TorchRSSMDynamics(LatentDynamics, nn.Module):
             )
         self.device = torch.device(device)
         self.torch_dtype = torch_dtype
+        self.image_size = int(image_size)
         self.proprio_dim = int(proprio_dim)
         self.action_dim = int(action_dim)
         self.recurrent_dim = int(recurrent_dim)
@@ -1096,9 +1097,20 @@ class TorchRSSMDynamics(LatentDynamics, nn.Module):
 
     # -- embedding -----------------------------------------------------------
     def _embed(self, rgb: torch.Tensor, proprio: torch.Tensor) -> torch.Tensor:
-        """RGB (uint8 [N,H,W,3] or float [N,C,H,W]) + proprio → embedding."""
+        """RGB (uint8 [N,H,W,3] or float [N,C,H,W]) + proprio → embedding.
+
+        Policy ``rgb`` is normally already 224 (post-capture fan-out). This
+        interpolate is a safety net if a caller still passes capture-res pixels.
+        """
         if rgb.dim() == 4 and rgb.shape[-1] in (1, 3):     # NHWC uint8 -> NCHW [0,1]
             rgb = rgb.permute(0, 3, 1, 2).to(self.torch_dtype) / 255.0
+        if rgb.shape[-2] != self.image_size or rgb.shape[-1] != self.image_size:
+            rgb = F.interpolate(
+                rgb,
+                size=(self.image_size, self.image_size),
+                mode="bilinear",
+                align_corners=False,
+            )
         return torch.cat([self.encoder(rgb), self.proprio_mlp(proprio)], dim=-1)
 
     # -- training loss (FastWAM signature) -----------------------------------
